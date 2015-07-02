@@ -25,5 +25,8 @@ typedef void (*PerlExtensionInit)(void);
 #endif
 PerlExtensionInit getPerlExtensionRoutine(USER_OBJECT_ rsExtensions);
 
+/* patch up to > perl 5.15 */
+#define sv_undef PL_sv_undef
+
 #endif
 

@@ -250,9 +250,11 @@ getPerlType(SV *el)
    case SVt_PVIO:
      name = "IOhandle";
      break;
+#if 0
    case SVt_RV:
      name = "reference";
      break;
+#endif
    default: 
      name = "?";
      break;
@@ -307,10 +309,12 @@ isPerlPrimitiveType(svtype type, SV *val)
      case SVt_PVNV:
        ans = TRUE;
        break;
+#if 0
      case SVt_RV:
        ans = isPerlPrimitive(SvRV(val));
        break;
-     case SVt_PVMG:
+#endif
+	 case SVt_PVMG:
         /* This is potentially very dangerous, but works for ENV. */
        ans = TRUE; /* isPerlPrimitive(SvMG(val));*/
        break;
@@ -480,9 +484,11 @@ getRSPerlClass(SV *val)
    case SVt_PVIO:
      name = "PerlIOhandleReference";
      break;
+#if 0
    case SVt_RV:
      name = "PerlReferenceReference";
      break;
+#endif
    case SVt_PVGV:
      name = "PerlGlobReference";
      break;

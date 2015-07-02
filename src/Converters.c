@@ -7,6 +7,7 @@
 
 
 #define USE_NEW_PERL_REFERENCES
+#define sv_undef PL_sv_undef
 
 ForeignReferenceTable exportReferenceTable;
 
@@ -858,10 +859,13 @@ getPerlCodeObject(USER_OBJECT_ name)
       case SVt_PVCV:
     	val = tmp;
     	break;
-      case SVt_RV:
+#if	0
+		/* SVt_RV no longer exists in modern perl versions */
+	  case SVt_RV:
 	val = SvRV(tmp);
     	break;
-      default:
+#endif
+	  default:
        val = NULL;
        getPerlType(tmp);
        break;
@@ -1052,10 +1056,12 @@ PerlAddHomogeneousElement(SV *val, int i, USER_OBJECT_ ans, svtype elementType)
       case SVt_PV:
          SET_STRING_ELT(ans, i, COPY_TO_USER_STRING(SvPV(val, PL_na)));
  	 break;
+#if 0
       case SVt_RV:
 	      SET_VECTOR_ELT(ans, i, fromPerl(sv_isobject(val) ? val : val/*XXX SvRV(val)*/, 1));
  	 break;
-      case SVt_PVMG: /* magic variable */
+#endif
+	  case SVt_PVMG: /* magic variable */
 	      /*XXX */ SET_VECTOR_ELT(ans, i, fromPerl(val, 0));
       break;
       case SVt_PVGV: /* glob value*/
