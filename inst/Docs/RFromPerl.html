@@ -1,0 +1,723 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title></title>
+<link rel="stylesheet" href="../../../Docs/OmegaTech.css" type="text/css">
+<meta name="generator" content="DocBook XSL Stylesheets V1.71.0">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="article" lang="en">
+<div class="titlepage"><hr></div>
+<div class="toc">
+<p><b>Table of Contents</b></p>
+<dl>
+<dt><span class="section"><a href="#Intro">Calling R From Perl: Installation and Run-time information</a></span></dt>
+<dt><span class="section"><a href="#installation">Installation</a></span></dt>
+<dd><dl>
+<dt><span class="section"><a href="#run-time%20variables">Run-time configuration variables</a></span></dt>
+<dt><span class="section"><a href="#PerlInstall">
+The Installation and controlling where the Perl modules are installed.
+</a></span></dt>
+</dl></dd>
+<dt><span class="section"><a href="#testing">Testing</a></span></dt>
+<dt><span class="section"><a href="#API">The API</a></span></dt>
+<dd><dl>
+<dt><span class="section"><a href="#initR">initR</a></span></dt>
+<dt><span class="section"><a href="#call">call</a></span></dt>
+<dt><span class="section"><a href="#callWithNames">callWithNames</a></span></dt>
+<dt><span class="section"><a href="#eval">eval</a></span></dt>
+</dl></dd>
+<dt><span class="section"><a href="#Misconceptions">Clearing up some understandable misconceptions</a></span></dt>
+</dl>
+</div>
+<div class="section" lang="en">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="Intro"></a>Calling R From Perl: Installation and Run-time information</h2></div></div></div>
+This is a brief note explaining how to use
+this package to call R from Perl.
+Please be aware that it currently only
+runs on Unix/Linux.
+
+<p></p>
+
+There are several other sets of instructions available. These tend to
+be more specific for a particular selection of choices one has at
+install time such as where RSPerl is installed (in the central R
+library or in a personal library when one does not have permission to
+write into the central R library or choses not to).  This
+documentation tries to cover more of the general ideas so that when
+things don't work, you have an idea why and therefore are better able
+to solve the problems.
+
+</div>
+<div class="section" lang="en">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="installation"></a>Installation</h2></div></div></div>
+
+Yes, this is a Perl module. But it is also an R package.  This is
+because it is a bi-directional interface, it allows R to call Perl and
+that very Perl code to call back to R.  It allows us to pass R
+functions to Perl and use them as callable objects. (Passing Perl
+subroutines or methods to R is a little less elegant, but doable.)
+
+<p></p>
+Because the code is both a Perl module and an R package, we don't have
+a simple choice in which approach to use for installing it. Because of
+my background, we use R's approach for package installation.  With
+hindsight, MakeMaker or other tools like that might have been more
+flexible, but we would still have to work within R's package mechanism.
+(There are moves afoot to make R's package system a lot more flexible,
+good as it already is.)
+
+<p></p>
+Anyway, now that we have seen why we use R to install the code, here's
+how.
+While we can install directly from the .tar.gz file, it may be best to 
+extract the files from the archive:
+<pre class="shell">
+ tar zxf RSPerl_0.9-0.tar.gz
+</pre>
+or whatever the name of the source distribution you downloaded actually is.
+
+<p></p>
+If you want to call R from within Perl (the topic of this
+document and why you are here), When installing the package, do so by
+providing the argument <code class="shellArg">--with-in-perl</code> to the
+configure script.  This is most easily done as
+<pre class="shell">
+ R CMD INSTALL  --configure-args='--with-in-perl' RSPerl
+</pre>
+
+We used to need the --clean flag, but this is no longer necessary.
+Now, --clean does actually clean up all the files that the
+configuration and installation created. (Well almost all and any
+others will be overwritten if you reinstall!)
+
+
+<p></p>
+Note also that to use the R-in-Perl mechanism one must have built R as
+a shared library. (This is not necessary when calling Perl from R.)
+You can check if this has been done by checking to see if libR is in
+the directory <code class="dir">
+$R_HOME/lib/</code>.  If this is not
+there, you are advised to clean the entire R distribution (with
+<code class="shellCommand">make distclean</code>) so as to start from scratch and then
+configure and compile R using the <code class="shellArg">--enable-R-shlib</code> to
+R's configuration script.  The following sequence of commands should
+work.
+<pre class="shell">
+cd $R_HOME
+make distclean
+./configure --enable-R-shlib
+make
+</pre>
+
+If you don't have the source distribution at hand and are using a
+previously installed binary, go fetch the source from
+<a href="http://cran.r-project.org/sources" target="_top">CRAN</a>.
+It is usually quite easy to install as a regular user and you can use
+the version directly from where you built it.
+
+<div class="section" lang="en">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="run-time%20variables"></a>Run-time configuration variables</h3></div></div></div>
+
+Because there are two systems involved in this interface and we can
+run R from within a Perl script or Perl within an R session/script,
+there are a lot of different combinations to consider.  If we run R
+inside Perl, we need to find both the R run-time library (libR.so) and
+also the RSPerl package which will get loaded when the R session is
+started. We also need to find some additional shared libraries/DLLs in
+the RSPerl package. For this, we need to make certain the dynamic
+loader can find all these DLLs.
+
+<p></p>
+Perl also needs to find the Perl code, i.e. the R.pm,  RReferences.pm
+and the R.so files.  We need to set 
+$PERL5LIB
+to specify their location.
+
+<p></p>
+
+Additionally, we need to know where the R package is located
+if it is not installed into <code class="dir">
+$R_HOME/library/</code>.
+This is done via 
+$R_LIBS<p></p>
+And if we are running R from within Perl we also need to tell
+the R engine where 
+$R_HOME is.
+
+<p></p>
+As Michael Dondrup said, that's a lot of environment variables
+to set.
+Typically we don't have to set them all. If we install the
+R package into a personal library, that library is typically
+where we put lots of R packages and so it is in our 
+$R_LIBS
+variable already.  Similarly, if we install the Perl code into
+a local Perl library, we will have that specified in our 
+$PERL5LIB
+environment variable.
+And if we are running Perl inside R, 
+$R_HOME is already set when we
+start R and also finding <code class="dir">libR.so</code> is done for us.
+
+<p></p>
+
+So the main variables we might have to set are
+
+$LD_LIBRARY_PATH and 
+$PERL5LIB if the
+Perl code is installed into the R package area,
+
+We provide two shell scripts to set these variables to the appropriate
+values. There is one for sh/bash-style shells and another for
+csh/tcsh-style shells named RSPerl.bsh and RSPerl.csh respectively.
+They are located in the <code class="dir">RSPerl/scripts /</code>
+directory of the <i>installed</i>
+package.  These are not executable but rather intended to be sourced
+into an existing shell to set the variables for the remainder of that
+shell session. Use 
+<pre class="shell">
+. RSPerl/scripts/RSPerl.bsh
+</pre>
+or
+<pre class="shell">
+source RSPerl/scripts/RSPerl.csh
+</pre>
+You can even add the relevant command to your <code class="dir">.bashrc</code> or
+<code class="dir">.cshrc</code> file so that they will be set when you create a
+new shell.
+
+<p></p>
+In version 0.9-0, if you do not specify additional configuration
+options controlling where the Perl code is installed (see <a href="#PerlInstall" title="
+The Installation and controlling where the Perl modules are installed.
+">the section called &#8220;
+The Installation and controlling where the Perl modules are installed.
+&#8221;</a>), the
+
+$PERL5LIB should be correct.  In the past, it has
+assumed that the MakeMaker code would put the files into
+<code class="dir">site_perl/</code> rather than the perl version directory.  This is
+unfortunately dependant on other configuration variables which I
+haven't had time to determine.  That is why it worked for me on all
+the machines I have access to, but not for some other people. So the
+scripts are not broken, but just not dynamic enough.  In version
+0.9-0, they should be correct regardless of MakeMaker's defaults.
+
+<p></p>
+Note also that if you are running R from within Perl, you do not need
+to set 
+$R_HOME or 
+$R_LIBS.  The values
+are conditionally set within the Perl code for the R module when you
+start the R session.  You will probably still need to specify the
+
+$LD_LIBRARY_PATH and 
+$PERL5LIB if you
+have installed the perl code outside of the standard Perl location.
+But again, these scripts should contain the correct settings.
+
+
+</div>
+<div class="section" lang="en">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="PerlInstall"></a>
+The Installation and controlling where the Perl modules are installed.
+</h3></div></div></div>
+
+The basic idea is this. The configuration script ends up calling
+<pre class="shell">
+perl Makefile.PL
+</pre>
+which creates (the non-standard) Makefile.perl.
+
+<p></p>
+This call to <code class="shellCommand">perl Makefile.PL</code> can be given numerous
+arguments, but we care about PREFIX and LIB.  These are explained in
+the Perl module ExtUtil::MakeMaker's own manual.
+
+<p></p>
+If you, the installer, do not specify anything about this detail, the
+files will be installed under the <code class="dir">perl/</code> directory of the
+installed R package, wherever that is (controlled by the -l flag for R
+CMD INSTALL or R_LIBS environment variable or simply into the R
+<code class="dir">library/</code> directory).  It is sensible to do this as the
+modules are tied to the package, and also we cannot simply install
+them as a regular Perl package as a common user. Instead we need write
+permission to the Perl site files and we do not want these privileges
+for our entire R installation script. 
+
+<p></p>
+If you want to control the location of the library, then you can use
+the --with-perl-lib argument to the configure script.  You specify the
+name of a directory and that is passed to the call <code class="shellCommand">perl
+Makefile.PL</code> as LIB=&lt;your value&gt;.
+
+<p></p>
+If you want to control the PREFIX argument to <code class="shellCommand">perl
+Makefile.PL</code>, then you can use the --with-perl-prefix.
+
+<p></p>
+
+
+If the user specifies the prefix and not the library, we assume she knows
+what she is doing and so we don't pass the LIB= argument.
+If the user specifies the library, we only pass that to the 
+<code class="shellCommand">perl Makefile.PL</code> call as the value of LIB=.
+
+<p></p>
+These two configration arguments give you access to setting the
+additional inputs for <code class="shellCommand">perl Makefile.PL</code>.
+If both are missing, then the MakeMaker code will set up 
+the installation to go into the standard Perl locations.
+To get this behaviour, you use the 
+<pre class="shell">
+R CMD INSTALL --configure-args='--with-perl-lib=' RSPerl
+</pre>
+Note that there is no value for the --with-perl-lib argument -
+it is the empty string.
+This is special and says don't pass anything to <code class="shellCommand">perl Makefile.PL</code>.
+
+<p></p>
+The <code class="shellCommand">R CMD INSTALL</code>
+script will end up calling
+<pre class="shell"> 
+ perl -f Makefile.perl install
+</pre>
+and if you are using the standard Perl location,
+this will fail unless you have permission to write there.
+If you don't, the <code class="shellCommand">R CMD INSTALL</code> will continue
+and you will have to  return and do the
+installation of these files manually.
+To do this, from within the source distribution in which the code was
+compiled (not installed), run the following commands
+<pre class="shell">
+ cd RSPerl/src
+ make -f Makefile.perl install
+</pre>
+
+
+A summary of the different inputs for the configuration scripts and
+where the Perl code is installed and what to set the 
+$PERL5LIB
+to is given in the following table.
+<table><table border="1"><colgroup>
+<col>
+<col>
+<col>
+</colgroup></table></table>
+
+
+So testing this on my old Red Hat machine with a guest login (i.e. no
+settings from my account), I need only set 
+$PERL5LIB
+(and 
+$LD_LIBRARY_PATH to <code class="dir">/usr/local/lib/</code> to
+pick up libgcc_s.so.1 on which libR.so depends because of using
+GCC_4.0).  If you use --with-perl-lib during the R installation (and
+then manuall make -f Makefile.perl install), you need not set any
+variables.  This is special to my machine it appears as all the shared
+libraries are found dynamically at run time because of the compiler
+switches.  On another (but more modern) Red Hat box, all I had to set
+was 
+$LD_LIBRARY_PATH to the <code class="dir">RSPerl/libs/</code> to
+find libPerlConverters.so and <code class="dir">/usr/local/lib/R/lib/</code> to find
+<code class="dir">libR.so</code>.
+
+
+By putting the module files in the usual Perl location, we have
+avoided the need for setting 
+$PERL5LIB.  We have also
+added 
+$R_HOME and the location of the RSPerl package
+which would ordinarily be specified by 
+$R_LIBS into
+the code in R.pm.
+
+Obviously, we cannot put the location of the Perl module into the Perl
+code and use that mechanism as we wouldn't know where to find the
+module code to run it!  So if we install it in a non-standard place,
+we assume that there is a good reason and that this is site-, group-
+or user-specific.
+
+</div>
+</div>
+<div class="section" lang="en">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="testing"></a>Testing</h2></div></div></div>
+
+The simplest test to run in order to determine if the R-in-Perl
+mechanism is working is the following.  Change directory to the
+location where the RSPerl package is installed.  (This should be in
+your 
+$R_LIBS environment variable if you have that set
+to one or more local libraries in which you keep your personal
+installation of R packages or in
+<code class="dir">
+$R_HOME/library/RSPerl/</code> if the RSPerl
+package was installed centrally.)  Then move into the 
+<code class="dir">tests/</code>
+directory.  Then run the <code class="executable">perl*</code> script
+<code class="dir">test.pl</code>.
+<code class="executable">perl*</code> will need to find the R-Perl module
+and the shared libraries. So make certain to set the environment
+variables by using the scripts
+discussed in <a href="#installation" title="Installation">the section called &#8220;Installation&#8221;</a>. 
+
+
+</div>
+<div class="section" lang="en">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="API"></a>The API</h2></div></div></div>
+
+The following section provides a very brief description of the
+available routines.  One should look at the example scripts in the
+<code class="dir">tests/</code> directory of the installed package to see how to call R
+from Perl.
+
+<p></p>
+Before doing anything within Perl to call R functions, etc.
+one needs to import the `R' module into your Perl script via the command
+<table xmlns:r="http://www.r-project.org" xmlns:python="http://www.python.org" xmlns:py="http://www.python.org" xmlns:perl="http://www.perl.org" xmlns:c="http://www.C.org" xmlns:vb="http://www.visualbasic.com" xmlns:omegahat="http://www.omegahat.org" xmlns:bioc="http://www.bioconductor.org" xmlns:java="http://www.java.com" xmlns:sql="http://www.sql.org" border="0"><tr align="left"><th><pre class="perl" align="left">
+ use R;
+</pre></th></tr></table>
+<br xmlns:r="http://www.r-project.org" xmlns:python="http://www.python.org" xmlns:py="http://www.python.org" xmlns:perl="http://www.perl.org" xmlns:c="http://www.C.org" xmlns:vb="http://www.visualbasic.com" xmlns:omegahat="http://www.omegahat.org" xmlns:bioc="http://www.bioconductor.org" xmlns:java="http://www.java.com" xmlns:sql="http://www.sql.org">
+This does not start the R session, it just makes the code 
+in the module available to you script.
+ 
+<p></p>
+Additionally, one should follow this with a command
+to load the `RReferences' module which is used
+to export R objects to Perl as ``references''.
+This import is done as
+<table xmlns:r="http://www.r-project.org" xmlns:python="http://www.python.org" xmlns:py="http://www.python.org" xmlns:perl="http://www.perl.org" xmlns:c="http://www.C.org" xmlns:vb="http://www.visualbasic.com" xmlns:omegahat="http://www.omegahat.org" xmlns:bioc="http://www.bioconductor.org" xmlns:java="http://www.java.com" xmlns:sql="http://www.sql.org" border="0"><tr align="left"><th><pre class="perl" align="left">
+ use RReferences;
+</pre></th></tr></table>
+<br xmlns:r="http://www.r-project.org" xmlns:python="http://www.python.org" xmlns:py="http://www.python.org" xmlns:perl="http://www.perl.org" xmlns:c="http://www.C.org" xmlns:vb="http://www.visualbasic.com" xmlns:omegahat="http://www.omegahat.org" xmlns:bioc="http://www.bioconductor.org" xmlns:java="http://www.java.com" xmlns:sql="http://www.sql.org">
+
+ 
+At this point, the R functionality is available to the script.  One
+need only initialize the R interpreter and then can make calls to
+arbitrary R functions, etc.
+
+
+<p></p>
+
+The two test scripts <code class="dir">test.pl</code> and <code class="dir">test1.pl</code> in
+the <code class="dir">tests/</code> of the installed package provide
+some simple examples of how to use the R-from-Perl
+invocation mechanism.
+Basically, there are a few methods/routines that
+provide access to R from Perl.
+These  are
+<div class="itemizedlist"><ul type="disc">
+<li>initR</li>
+<li>call</li>
+<li>callWithNames</li>
+<li>eval</li>
+</ul></div>
+<div class="section" lang="en">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="initR"></a>initR</h3></div></div></div>
+<font class="perlSub">initR()</font> is now a regular Perl subroutine (having been
+changed from a native routine) that ends up calling a C routine to
+start the R session.
+<font class="perlSub">startR()</font> is now a simple call to  <font class="perlSub">initR()</font>
+so either will work.
+
+Both these sub-routines take an arbitrary number of strings which are
+used as the command line arguments one would pass to R if invoking it
+from the shell command line.
+For example
+<table xmlns:r="http://www.r-project.org" xmlns:python="http://www.python.org" xmlns:py="http://www.python.org" xmlns:perl="http://www.perl.org" xmlns:c="http://www.C.org" xmlns:vb="http://www.visualbasic.com" xmlns:omegahat="http://www.omegahat.org" xmlns:bioc="http://www.bioconductor.org" xmlns:java="http://www.java.com" xmlns:sql="http://www.sql.org" border="0"><tr align="left"><th><pre class="perl" align="left">
+
+ &amp;R::startR("--silent")
+ &amp;R::startR("--gui=none", "--vanilla")
+
+ &amp;R::initR("--silent")
+ &amp;R::initR("--gui=none", "--vanilla")
+
+</pre></th></tr></table>
+<br xmlns:r="http://www.r-project.org" xmlns:python="http://www.python.org" xmlns:py="http://www.python.org" xmlns:perl="http://www.perl.org" xmlns:c="http://www.C.org" xmlns:vb="http://www.visualbasic.com" xmlns:omegahat="http://www.omegahat.org" xmlns:bioc="http://www.bioconductor.org" xmlns:java="http://www.java.com" xmlns:sql="http://www.sql.org">
+These arguments are available to R expressions via the function
+<i><a href="commandArgs.html">commandArgs()
+  </a></i>.
+
+<p></p>
+
+These subroutines take care of conditionally setting the value of the
+environment variable 
+$R_HOME as determined at
+configuration/installation time. If 
+$R_HOME is already
+set, it will leave that value. This allows one to use different R
+installations with the same code. But be careful when doing this that
+they are binary compatible!
+
+<p></p>
+<font class="perlSub">initR()</font> also loads the RSPerl package into R.  This
+is generally a good thing to do.  However, if there are reasons to
+avoid this, use the <i><a href="initRSession.html">initRSession()
+  </a></i> subroutine
+which is the native routine that starts the session.
+Note that this will not set 
+$R_HOME.
+To do this, you can call <font class="perlSub">setRHome()</font>.
+And you can also use
+<font class="perlSub">getDefaultRHome()</font> to find the value
+of 
+$R_HOME determined at install-time.
+
+ 
+</div>
+<div class="section" lang="en">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="call"></a>call</h3></div></div></div>
+
+Having started the R session, we can not make function calls.
+In both Perl and R, we would call a function directly by its name
+as it is a regular variable. Of course, R variables are not directly
+accessible in the scope of Perl commands and that is a good thing!
+But we would still like to be able to write something like
+<table xmlns:r="http://www.r-project.org" xmlns:python="http://www.python.org" xmlns:py="http://www.python.org" xmlns:perl="http://www.perl.org" xmlns:c="http://www.C.org" xmlns:vb="http://www.visualbasic.com" xmlns:omegahat="http://www.omegahat.org" xmlns:bioc="http://www.bioconductor.org" xmlns:java="http://www.java.com" xmlns:sql="http://www.sql.org" border="0"><tr align="left"><th><pre class="perl" align="left">
+ R::sin(3.1415);
+</pre></th></tr></table>
+<br xmlns:r="http://www.r-project.org" xmlns:python="http://www.python.org" xmlns:py="http://www.python.org" xmlns:perl="http://www.perl.org" xmlns:c="http://www.C.org" xmlns:vb="http://www.visualbasic.com" xmlns:omegahat="http://www.omegahat.org" xmlns:bioc="http://www.bioconductor.org" xmlns:java="http://www.java.com" xmlns:sql="http://www.sql.org">
+We use Perl's  AUTOLOAD feature to dynamically map names  that have no corresonding
+subroutine into.
+In this way, all the available R variables are available using this 
+syntax
+<code class="per">R::functionName(arg1, arg2, ...)</code><p></p>
+
+The AUTOLOAD facility is a convenient wrapper to the
+<font class="perlSub">call()</font> subroutine in the R module.  This is what
+actually invokes arbitrary R functions from within Perl.  This takes
+the name of the R function and a collection of arguments and invokes
+the corresponding R function directly and returns its value.
+
+
+<font class="perlSub">call()</font> is one of the three fundamental method of the
+interface that allows the caller in Perl to invoke an S function,
+passing values from Perl to R and having them converted as they are
+transferred across the interface.  One has to be aware of the way that
+Perl places values on its stack. If one has a Perl array and passes
+this directly to the call, all the values in the array will be treated
+as individual arguments to the S function. To pass the array as a
+single value, pass its reference, using the \ escape mechanism.
+
+<table xmlns:r="http://www.r-project.org" xmlns:python="http://www.python.org" xmlns:py="http://www.python.org" xmlns:perl="http://www.perl.org" xmlns:c="http://www.C.org" xmlns:vb="http://www.visualbasic.com" xmlns:omegahat="http://www.omegahat.org" xmlns:bioc="http://www.bioconductor.org" xmlns:java="http://www.java.com" xmlns:sql="http://www.sql.org" border="0"><tr align="left"><th><pre class="perl" align="left">
+
+ R::sum((1,2,3))
+
+ @x = 1..10;
+ R::call("plot", \@x);
+
+</pre></th></tr></table>
+<br xmlns:r="http://www.r-project.org" xmlns:python="http://www.python.org" xmlns:py="http://www.python.org" xmlns:perl="http://www.perl.org" xmlns:c="http://www.C.org" xmlns:vb="http://www.visualbasic.com" xmlns:omegahat="http://www.omegahat.org" xmlns:bioc="http://www.bioconductor.org" xmlns:java="http://www.java.com" xmlns:sql="http://www.sql.org">
+
+When creating arrays to pass to R, we can also use the
+[] operator to create the array and thus create a scalar
+reference to the underlying array.
+So we could have written the second example above as
+<table xmlns:r="http://www.r-project.org" xmlns:python="http://www.python.org" xmlns:py="http://www.python.org" xmlns:perl="http://www.perl.org" xmlns:c="http://www.C.org" xmlns:vb="http://www.visualbasic.com" xmlns:omegahat="http://www.omegahat.org" xmlns:bioc="http://www.bioconductor.org" xmlns:java="http://www.java.com" xmlns:sql="http://www.sql.org" border="0"><tr align="left"><th><pre class="perl" align="left">
+ $x = [1..10];
+ R::plot($x);
+</pre></th></tr></table>
+<br xmlns:r="http://www.r-project.org" xmlns:python="http://www.python.org" xmlns:py="http://www.python.org" xmlns:perl="http://www.perl.org" xmlns:c="http://www.C.org" xmlns:vb="http://www.visualbasic.com" xmlns:omegahat="http://www.omegahat.org" xmlns:bioc="http://www.bioconductor.org" xmlns:java="http://www.java.com" xmlns:sql="http://www.sql.org">
+</div>
+<div class="section" lang="en">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="callWithNames"></a>callWithNames</h3></div></div></div> 
+
+R has a very flexible function call mechanism with partial name
+matching, default values and optional arguments and lazy evaluation.
+The named arguments are different from in Perl and so we need a way
+to emulate this from within Perl.
+<font class="perlSub">callWithNames()</font> allows one to call an S
+function with named arguments.  The first argument is the name of the
+function to be called, specified as a string just as with
+<font class="perlSub">call()</font>.  The second argument is
+a hash-table or associative array of name-value pairs.  In the case of
+arguments which no names are required in S, one can use an empty
+string (''). In these cases, the arguments are matched by position.
+See R's argument matching mechanism.
+
+
+<p></p>
+See <code class="dir">tests/test3.pl</code>.
+<table xmlns:r="http://www.r-project.org" xmlns:python="http://www.python.org" xmlns:py="http://www.python.org" xmlns:perl="http://www.perl.org" xmlns:c="http://www.C.org" xmlns:vb="http://www.visualbasic.com" xmlns:omegahat="http://www.omegahat.org" xmlns:bioc="http://www.bioconductor.org" xmlns:java="http://www.java.com" xmlns:sql="http://www.sql.org" border="0"><tr align="left"><th><pre class="perl" align="left">
+
+  # Call  plot(x, ylab="My values")
+ @x = 1..10;
+ &amp;R::callWithNames("plot", {'',\@x, 'ylab', 'My values'});
+
+ # Call  plot(x = x, y = y, ylab="My values")
+ @y = &amp;R::call("rnorm", 10);
+ &amp;R::callWithNames("plot", {'x',\@x, 'y', \@y, 'ylab', 'My values'});
+
+ # Call  par(mfrow=c(1,2))
+ @x = (1,2);
+ &amp;R::callWithNames("par", {'mfrow', \@x} );
+
+ # R command:   plot(x, y, xlab = "Horizontal", ylab = "My values")
+ $x = [ 1..10 ];
+ &amp;R::callWithNames("plot", {'' =&gt; $x, '' =&gt; \@y, xlab =&gt; "Horizontal", ylab =&gt; 'My values'});
+
+</pre></th></tr></table>
+<br xmlns:r="http://www.r-project.org" xmlns:python="http://www.python.org" xmlns:py="http://www.python.org" xmlns:perl="http://www.perl.org" xmlns:c="http://www.C.org" xmlns:vb="http://www.visualbasic.com" xmlns:omegahat="http://www.omegahat.org" xmlns:bioc="http://www.bioconductor.org" xmlns:java="http://www.java.com" xmlns:sql="http://www.sql.org">
+</div>
+<div class="section" lang="en">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="eval"></a>eval</h3></div></div></div>
+
+In some circumstances, it is useful to be able to evaluate S
+expressions given as strings in the S language.  The method eval()
+allows one to do this.  Please note that string-based communication
+between two system is not a good general design and can cause many
+problems in maintaining code, avoiding name conflicts, and greatly
+complicates mutable objects that span the two systems.  Additionally,
+it exposes the syntax of the target system (S) to the user of the host
+system (Perl) which is what this inter-system interface is trying to avoid.
+Neverthless, it is occassionally useful and convenient.
+The <font class="perlSub">eval()</font> function in the R module allows us to 
+evaluate an R command from within Perl.
+<table xmlns:r="http://www.r-project.org" xmlns:python="http://www.python.org" xmlns:py="http://www.python.org" xmlns:perl="http://www.perl.org" xmlns:c="http://www.C.org" xmlns:vb="http://www.visualbasic.com" xmlns:omegahat="http://www.omegahat.org" xmlns:bioc="http://www.bioconductor.org" xmlns:java="http://www.java.com" xmlns:sql="http://www.sql.org" border="0"><tr align="left"><th><pre class="perl" align="left">
+
+ &amp;R::eval("sum(1:10)");
+ &amp;R::eval("plot(1:10); T");
+ &amp;R::eval("par(mfrow=c(2,1)); x &lt;- rnorm(10); hist(x) ; plot(x) ; rm(x); TRUE");
+
+</pre></th></tr></table>
+<br xmlns:r="http://www.r-project.org" xmlns:python="http://www.python.org" xmlns:py="http://www.python.org" xmlns:perl="http://www.perl.org" xmlns:c="http://www.C.org" xmlns:vb="http://www.visualbasic.com" xmlns:omegahat="http://www.omegahat.org" xmlns:bioc="http://www.bioconductor.org" xmlns:java="http://www.java.com" xmlns:sql="http://www.sql.org">
+</div>
+</div>
+<div class="section" lang="en">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="Misconceptions"></a>Clearing up some understandable misconceptions</h2></div></div></div>
+
+Some of the more advanced users of RSPerl have been very helpful
+in providing feedback and help to other users to make things work
+on different machines. For this, I am extremely grateful.
+Configuration issues on numerous machines takes an enormous amount
+of time, probably over 70% of the development time of the package!
+
+<p></p>
+Many of these individuals are using R from within Perl scripts
+and are Perl programmers rather than R aficionados.
+Entirely understandably therefore, they are not necessarily entirely
+familiar with all the details of R. There are a lot and it is amazing how
+much people know or have found out so quickly.
+
+
+<div class="itemizedlist">
+$PERL_MODULES<ul type="disc">
+<li> 
+ The tests do use plotting but this does not require 
+X11 or ghostscript (gs) to run. It will output
+the plot to the default graphics device which is
+Postscript if not otherwise specified.  To look at
+the resulting plot, you will need a way to view the
+contents of the Postscript file. But that does not
+nullify the utility of the test. Mereley  looking
+at the size of the file will tell us whether 
+something meaningful was produced.
+</li>
+<li>
+We could put the test scripts into a single script
+and this is more Perl-like. However, I want them separate
+so that I can test the code easily.  
+For one, some of the tests involve starting R with
+different arguments.  Since we can only start R once
+within a session (at present), we need separate test
+scripts and separate perl processes to test this.
+
+<p></p>
+It is relatively easy to construct a single test file 
+from all the individual tests.
+</li>
+<li>
+There are several environment variables that need to be set
+to run Perl in R or R in Perl.
+These could go away if one was just running
+R in Perl or Perl in R with no callbacks from either side.
+However, the richness of the interface is this ability to have
+callbacks and an extended computing environment rather than 
+two environments with a limited interface.
+<p></p>
+Version 0.9-0 does remove the need to specify many of them.
+
+$LD_LIBRARY_PATH is, by its nature,
+something that is hard to avoid as it must be set before a
+process is started to have any effect on the loading of DLLs.
+
+<p></p>
+The RSPerl.csh and RSPerl.bsh scripts set the environment variables
+you need.  If they get any of these wrong, let's fix these for that
+platform.  But unfortunately, there are good but technical reasons why
+these variables are actually needed. It is not just laziness the
+precludes getting rid of them.  And version 0.9-0 now should avoid
+getting them wrong on any system unless the person installing
+specifies a value for <code class="shellArg">--with-perl-prefix</code> in the
+configuration options.
+</li>
+<li>
+The RSPerl.csh/RSPerl.bsh scripts are not "broken".  They may not work
+for all cases, but they certainly work on all the machines I use.  And
+as of version 0.9-0, they should be correct on all machines.
+</li>
+<li>
+For running R inside Perl, you will need libR.so both at compile time
+and run-time. Finding it at compile time is easy and left to the
+installation scripts.  Locating it at run-time is harder and cannot be
+done by the installation script in a foolproof manner for all
+platforms, compilers, ....
+<p></p>
+
+If you are using libR.so a lot, e.g. for repeated use of RSPerl or
+other applications as well, you could put libR.so into
+<code class="dir">/usr/local/lib/</code> and run
+<code class="executable">/sbin/ldconfig*</code>.  (If the dynamic loader does
+not look in <code class="dir">/usr/local/lib/</code>, choose a directory in which it
+does search. See <code class="dir">ld.so.conf</code>.)  This will allow the
+dynamic loader to find it along with other files that it typically
+needs and are located in a default place on the system.
+
+<p></p>
+There is a potential downside to this. It is quite possible that
+when you install a new version of R (there is a release every 6 months
+and patch releases once or twice after a major release)
+that you may pick up the wrong version of libR.so.
+Suppose you install a new copy of R into a personal directory
+and expect to use libR.so from that one. You had better make certain to override
+the dynamic loader's usual discovery of libR.so. In this case you would need to
+set 
+$LD_LIBRARY_PATH.
+
+
+
+</li>
+<li>
+The environment variables R_LIBS, R_HOME, 
+LD_LIBRARY_PATH help to control the run-time
+behaviour of R inside Perl and Perl inside R.
+Typically, these will not be set but you define
+them yourself to specify the directories or files
+of interest.
+
+<p></p>
+Similarly, at configuration time for installing the RSPerl package for
+running Perl inside of an R session, we need to tell Perl about some
+Perl modules we may expect to use that have native code (i.e. compiled
+C/C++).  Perl needs to be told about these.  We can specify the
+modules of interest using, e.g.
+<pre class="shell">
+R CMD INSTALL --configure-args='--with-modules="File::Glob IO Fcntl Socket"' RSPerl
+</pre>
+</li>
+</ul>
+</div>
+</div>
+</div></body>
+</html>

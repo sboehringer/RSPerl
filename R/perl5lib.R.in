@@ -1,0 +1,11 @@
+getPerl5LibValue = 
+function()
+{
+  "@PERL5_PATH@"
+}
+
+getPerlDynModules = 
+function()
+{
+  @R_PERL_MODULES@
+}

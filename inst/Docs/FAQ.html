@@ -1,0 +1,380 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<link rel="stylesheet" href="http://www.omegahat.org/XSL/faq.css">
+<link rel="stylesheet" href="../../../Docs/XSL/faq.css">
+<title>FAQ for the RSPerl package</title>
+</head>
+
+<body>
+<h1>FAQ for the RSPerl package</h1>
+<dl>
+  <dt class="question">
+  <p class="date">July 6, 06</p>
+  <li>When running Perl inside R, I create a new Perl interpreter
+      via .PerlInit() and later I close it via .PerlTerminate().
+      However, I get a lot of messages of the form      
+<pre>
+Attempt to free non-existent shared string 'ldlibpthname' during global destruction.
+</pre>
+  What's the problem?
+  <dd class="answer">
+     I have two versions of Perl installed on one of my machines.
+     These are 5.8.0 and 5.8.8 in /usr and /usr/local.
+     When I use the 5.8.8 version, I get these error messages.
+     When I use 5.8.0, everything is fine.
+     <p/>
+      I haven't yet had the time to determine what the underlying
+      cause of the problem is. Thread is one possibility.
+      Fortunately, it doesn't seem to be a problem as we can continue
+      the R session and we can also subsequently  create new Perl
+      interpreters that work.
+
+  
+  <dt class="question">
+  <p class="date">July 5, 06</p>
+  <li>When running Perl inside R, I try to load a module via
+      .PerlPackage("myPackage")  or .PerlExpr("use myPackage;").
+      But I get an error something like
+<pre>
+Error in .PerlExpr("use GCC::TranslationUnit;") : 
+	Error evaluating use GCC::TranslationUnit;: Can't load '/usr/local/lib/perl5/5.8.8/i686-linux/auto/Fcntl/Fcntl.so' for module Fcntl: /usr/local/lib/perl5/5.8.8/i686-linux/auto/Fcntl/Fcntl.so: undefined symbol: PL_sv_undef at /usr/local/lib/perl5/5.8.8/i686-linux/XSLoader.pm line 70.
+ at /usr/local/lib/perl5/5.8.8/i686-linux/Fcntl.pm line 234
+</pre>
+      where Fcntl is replaced by the package you are trying to load.
+      What's the problem? and how can I fix it?
+  <dd class="answer">
+  The problem relates to how Perl loads modules  with native
+      code. When the modules are compiled and installed, it is
+      expected that they will be used within the standalone Perl. All
+      the Perl code (symbols such as PL_sv_undef) that these modules
+      use is found when they are dynamically loaded into the running
+      Perl application. When R is the host and Perl is embedded, these
+      symbols are not in the host application, but kept in the separate
+      table that is created when Perl is loaded.
+      <p>
+       How do you get around this? There are two ways:
+      <ol>
+	<li> When installing RSPerl, tell it which modules you will
+	    want to load that have native code that will be dynamically
+	    loaded. Do this with the --with-modules argument to
+	    configre
+	     (using the --configure-args option for R CMD INSTALL).
+       <li> The other approach is to force the Perl symbols to be
+	   available centrally via the host application. You can do this on
+	   UNIX, at least, by loading the RSPerl.so into R with the
+	   local argument set to FALSE, i.e.
+<pre>
+dyn.load(system.file("libs", paste("RSPerl", .Platform$dynlib.ext, sep = "")), package = "RSPerl") ,
+          local  = FALSE)
+</pre>	   
+ Do this BEFORE you load the RSPerl package with library(RSPerl) or it
+	   is implicitly loaded.
+	   
+      </ol>
+
+  
+  <dt class="question">
+  <p class="date">Jun 7, 06</p>
+  <li> When I install, I'd like to have the Perl module files (i.e
+      R.pm and RReferences.pm and the documentation files) be installed in the usual places for
+       Perl packages. How can I do this?
+  <dd class="answer">
+      The simplest answer is to use --with-perl-prefix
+      when specifying the configuration arguments to R CMD INSTALL.
+      Use
+<pre>
+  R CMD INSTALL --configure-args='--with-perl-prefix=' RSPerl
+</pre>      
+Note that there is no value given for the argument. This tells the
+  configuration script that you want Perl's own setting.
+(Alternatively you can specify a directory of your     own chosing
+      and the files will be installed under that.
+
+      <p/>
+       That wasn't so hard now, was it?  Well the only problem is that
+      when the configuration script asked Perl to install these files
+      it probably failed as you did not have permission to write to
+      those system-level  directories. (<i>You may have if you were
+      running   as root, but that is far from ideal. Do you really trust this
+      configuration script in all its complexity not to do something
+      dangerous.   I know I don't and I wrote the script!</i>).
+       <p/>
+      To fix this problem, assuming you didn't use the --clean
+      argument for R CMD INSTALL, we can do that part of the
+      installation manually.
+      Either use sudo or explicitly login as root to
+      perform the following task:
+      <ul>
+	<li>  Change directory to <code>RSPerl/src</code>
+
+	<li>  give the command<br>
+               <code>make -f Makefile.perl install</code>
+      </ul>
+
+   There you go!
+
+      <br>
+   Thanks to Michael Dondrup for motivating me to do this.
+      
+      
+  <dt class="question">
+  <li> When running Perl within an R session, I am trying to load a
+      Perl module.  However, I just get a segmentation fault and a crash.
+  <dd class="answer">
+      I'm trying to find a good way to prohibit this from happening
+      and catch error messages about the reason for the failure.
+      Before I get to that however, the following may be helpful.
+      The issue is probably to do with dynamically loaded modules
+      in Perl running inside R.
+      The way Perl loads modules that themselves have compiled native
+      code, e.g. C, C++ or Fortran,
+      is a little akward and this manifests itself when Perl is
+      embedded in another application.
+      When compiling the embedded Perl, we must tell it what modules
+      we expect to load that have native code.
+      And we must also get the dependencies right.
+      For example, I wanted to load the IO module.
+      But that depends on the Fcntl and Socket modules which have
+      native,
+      compiled code.  So I need to tell the embedded Perl about those
+      too when compiling it to go into R.
+      To do this, use
+<pre>
+       R CMD INSTALL --configure-args='--with-modules="IO Fcntl Socket"' RSPerl
+</pre>      
+
+       If you just specify IO and not the Fcntl and Socket, you'll see
+      a segmentation fault after
+<pre>
+library(RSPerl)
+.PerlExpr("use IO;")
+</pre>
+      
+      
+  <dt class="question">  
+  When I try to install, the final link step
+      in building RSPerl.so fails saying
+<pre>
+/usr/bin/ld: cannot find -lperl
+collect2: ld returned 1 exit status
+make: *** [RSPerl.so] Error 1
+ERROR: compilation failed for package `RSPerl'      
+</pre>      
+   <dd class="answer"> This has occurred on Debian.
+       Dirk Eddelbuettel (<code>edd@debian.org</code>),
+      points out
+<table>      
+<tr><th>
+<i> you need to
+ install the matching -dev package which creates the link for you -- in this case
+ the package is called "libperl-dev".
+</i>    
+</tr></tr>
+</table>
+
+<p>
+      The simple perl script
+<pre>
+ perl -e 'use ExtUtils::Embed; print ldopts(), "\n"' ;  
+</pre>
+      should return the correct options. However, for some reason
+      it is not giving the correct values on some machines.
+</dl>
+
+<dl>
+  <dt class="question">  
+ When I use RSPerl on the Mac, I get messages about not being able
+    to find different Perl modules.
+  <dd class="answer">  Set the environment variable PERL5LIB, not PERLLIB.  
+    
+</dl>
+<dl>
+  <dt class="question">
+  <li> When calling R from Perl to draw a plot everything works fine
+      when I call the script without any redirection. When I redirect
+      a data stream into the script via a pipe or from a file such
+      as
+<pre>
+   perl plot.pl < fileName
+   bar | perl plot.pl
+</pre>
+   the plot does not appear!
+      What's the problem?
+  <dd class="answer">
+      In fact the plot is created but it is not displayed in the
+      usual window.  Instead, it is stored in the file <i>Rplot.ps</i> since the
+      Postscript graphics device is the default when the R session
+      is considered non-interactive. And it is considered
+      non-interactive since the standard input stream is the redirected input.
+      Essentially there is no terminal associated with the Perl
+      process. This is an interaction between R and Perl when
+      embedded and makes sense but may need to be overridable in the future.
+      Connecting "connections" in Perl to R is also needed.
+      <p>
+      To fix this "problem", just explicitly open a graphics device
+      before
+      calling plot. See <i>plot1.pl</i> in the <b>tests</b> directory
+      of the package.
+
+  <dt class="question">
+      When dealing with numbers in Perl and using them in R, I get
+      errors   about the wrong mode, etc.
+      What's the problem?
+
+  <dd class="answer"> Perl tries to be helpful by working with strings and numbers
+      alike without the user having to worry about the particular
+      form. So <code>$a = "1"</code> can be used as a string or
+      a number.
+      However, when such a value is passed to R,  we pass it is
+      a string to R. When used in an R expression that expects a
+      number, R raises an error.
+      <p>
+    This arises when we use R to read numbers from a file or stream
+    and then pass them directly to R. Instead, we must ensure that
+    they are numbers in Perl before passing them to R.
+    This can be done easily by merely adding <i>0</i> to the
+    value as it is read.
+    Or we can explicitly use R to convert the values to numbers
+      (e.g. by calling <code>as.numeric</code>)
+    and then use the result. This invilves multople transfers
+      of the data.
+    See <a href="examples/stringNums.pl">stringNums.pl</a>
+      in the <b>tests/</b> directory.
+
+
+  <dt class="question">
+      I get errors saying <code>Non-code reference passed via .Perl.
+      Need a sub-routine name or Code object.</code>
+  <dd class="answer">
+      More than likely, you are specifying both the name of
+      a Perl routine and its package name, e.g.
+<pre>
+ .Perl("myRoutine",  pkg = "MyPackage")
+</pre>      
+      One thing to do is to load the
+      Perl module/package (MyPackage) before using the
+      call
+<pre>
+.PerlPackage("MyPackage")
+</pre>
+      Then the call
+<pre>
+ .Perl("myRoutine",  pkg = "MyPackage")
+</pre>
+      works fine.
+
+
+  <p>
+       Alternatively, we need to fix the code to identify the
+      Code object that gets resolved.
+      
+
+</dl>
+
+
+<dl>
+  <dt class="question">  
+   How do I find out where Perl is looking for modules.
+  <dd class="answer">
+      <pre>
+.PerlGet("INC", TRUE)
+      </pre>
+
+       You may want to do this if you have two versions of perl
+      installed and want to verify that it is using the right one.
+
+
+
+  <dt class="question">
+  <li><a  name="PerlModules"/>
+
+     <i>
+      When I try to install the  RSPerl package, I get an error
+      message something like the following:
+<pre>
+ld: /System/Library/Perl/5.8.1/darwin-thread-multi-2level/auto/Apache/Leak/Leak.bundle is input for the dynamic link editor, is not relocatable by the static link editor again
+ld: /System/Library/Perl/5.8.1/darwin-thread-multi-2level/auto/Apache/Symbol/Symbol.bundle is input for the dynamic link editor, is not relocatable by the static link editor again 
+</pre>    
+     </i>
+  </li>
+  <dd class="answer">
+    When Perl is run inside R, and one wants to load a
+   Perl module which uses C code,  special handling is needed 
+   which the RSPerl package tries to do automatically.
+   To exclude some C-based modules from this treatment, 
+   you can specify which ones to include, or none.
+
+   <p>
+   To run R inside Perl (only), you do not need
+   this support for loading Perl modules.  Accordingly, the default
+   for PERL_MODULES is no. So
+<pre>    
+   R CMD INSTALL --configure-args='--with-in-perl' RSPerl
+</pre>
+    is the same as 
+<pre>    
+   R CMD INSTALL --configure-args='--with-in-perl --with-modules=no' RSPerl
+</pre>    
+
+  <dt>
+  <li> When running Perl from within R, I sometimes attempt load a
+      Perl module and I get a horrific crash that terminates my R
+      session.
+      Can you help?
+  <dd>
+      This relates to <a href="#PerlModules">the question above</a>.
+      If that module uses dynamically loaded C code in Perl, then you
+      have to explicitly tell the RSPerl package to include it
+      in the PERL_MODULES during the installation.
+      <br>
+      Of course, the R session shouldn't crash.
+      This is related to the presence of threads in the Perl
+      installation.
+      One can determine all of the configuration settings used to
+      build     the particular installation of Perl using
+      <pre>perl -V</pre>
+      and the command line arguments to Configure with
+      <code>perl -V:config_args</code>
+
+      If I build Perl with the command line
+      <pre>
+      ./Configure -de -Doptimize='-fPIC -g' ; make
+      </pre>
+      then the resulting version of Perl in /usr/local/bin
+      behaves properly.
+      Adding <code>-Dusemultiplicity</code> causes an error
+      to terminate the process, e.g.
+      .PerlPackage("Storable") just exits.
+
+  <dt class="question">
+  <p class="date">July 6, 06</p>
+  <li> So you tell me I need to have specified the Perl modules that
+      use compiled/native code when RSPerl is installed if I want to
+      make use of them from within an R session. But how do I know
+      which ones I need to specify.
+  <dd>  Well one "brute force" way is on Linux is to use strace to
+      find all relevant operations on a .so file. We can do this with
+      the following  command where we load the Mail::Box::Mbox module
+<pre>      
+strace -f -F -s 300 perl -e 'use Mail::Box::Mbox;' |& grep '/.*\.so"'  | grep -v '\(No such file or directory\)' | grep -v CORE | sed -e 's|.*/auto/\(.*\)/.*\.so".*|\1|' | sort | uniq
+</pre>
+       All this does is run the Perl command to load the module and
+      trace the system calls. We look only at the lines containing the
+      string ".so" and exclude lines where the attempt to access the
+      file was unsuccessful (i.e. there is a message "No such file or
+      directory"). Then we exclude libperl.so itself which is in CORE
+      and then get to work to extract the directory names after the
+      /auto directory.  We can then process the list further to
+      convert / to :: to get the Perl module name when they are nested.
+      <p/>
+      
+</dl>
+PePe
+
+<hr>
+<address><a href="http://www.stat.ucdavis.edu/~duncan">Duncan Temple Lang</a>
+<a href=mailto:duncan@wald.ucdavis.edu>&lt;duncan@wald.ucdavis.edu&gt;</a></address>
+<!-- hhmts start -->
+Last modified: Tue Jul 31 06:32:40 PDT 2007
+<!-- hhmts end -->
+</body> </html>

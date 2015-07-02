@@ -1,0 +1,15 @@
+if(${?@LD_PATH_VAR@}) then
+ setenv @LD_PATH_VAR@ ${@LD_PATH_VAR@}:@LD_PATH@:@R_SO_DIR@
+else
+ setenv @LD_PATH_VAR@ @LD_PATH@:@R_SO_DIR@
+endif
+
+if("@PERL5_PATH@" != "") then
+ if(${?PERL5LIB}) then
+   setenv PERL5LIB ${PERL5LIB}:@PERL5_PATH@
+ else
+   setenv PERL5LIB @PERL5_PATH@
+ endif
+endif
+
+

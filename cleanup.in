@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# Since we said we'd cleanup, we will although that  is not 
+# really what this script is for. It is in cleanup only as the only
+# way to get a hook to do some post-processing after the R installation
+# of the package. We are doing the Perl installation.
+echo "Removing additional files"
+rm -fr src/blib
+rm src/Makefile.perl src/Makefile.PL src/pm_to_blib src/RinPerlMakefile
+rm confdefs.h config.log config.status
+rm cleanup
+
+exit 0
+
+#############################################################################
+# The remainder of this is now done via the configure script and make calls.
+#
+
+cd src
+if ! test -d @R_PACKAGE_DIR@/share ; then
+ mkdir @R_PACKAGE_DIR@/share
+fi
+
+echo "making RinPerlMakefile"
+${MAKE-make} -f RinPerlMakefile 
+${MAKE-make} -f Makefile.perl install
+
+
+if test ! -d @R_PACKAGE_DIR@/share ; then
+  mkdir @R_PACKAGE_DIR@/share
+fi
+
+cp -r blib @R_PACKAGE_DIR@/share
+cp test.pl @R_PACKAGE_DIR@/examples
+
+
+
+

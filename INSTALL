@@ -1,0 +1,82 @@
+To install this as an R package, issue the command
+
+    R CMD INSTALL RSPerl.tar.gz
+
+(replacing RSPerl.tar.gz with the actual name of the tar file
+including the package's version number, e.g RSPerl_0.1.tar.gz).
+
+This should work without the need for supplying extra parameters.
+
+The installation can be customized in several different
+ways.
+
+To use Perl modules in R that themselves use C level code
+(e.g. the Sockets and IO modules), we must add extra bootstrapping
+C code to the R shared library. The configuration needs to know which 
+modules to support. These can be specified in two ways:
+1) via the argument
+     --with-modules="module1 module2 ..."
+and
+2) by setting the environment variable PERL_MODULES.
+
+The first can be given to the R INSTALL command as
+  R CMD INSTALL -c --configure-args="--with-modules='Fcntl Socket IO'" RSPerl
+
+Note that this is highly shell specific in terms of getting the right
+hand side of the --with-modules assignment to be recognized
+correctly. Thus it is easier to use approach 2), as in
+  PERL_MODULES="Fcntl Socket IO" ; export PERL_MODULES  # Bash shell
+or 
+  setenv PERL_MODULES "Socket IO"  # C, Tcsh shells
+
+By default, the configuration includes all the modules in the base
+Perl module auto-load directory (excluding the B module).
+
+Refer to modules with names like File::Glob in precisely that form,
+i.e. File::Glob and Compress::Raw::Zlib.
+
+
+Specifying which Modules to Link.
+================================
+
+In some cases, it is desirable to include all but a few of the
+modules.  (On some systems, modules have been installed and libraries
+on which they depend have been removed, leaving the code unloadable.)
+The simplest way to do this is to use the methods.pl Perl script
+in the top-level directory of the RSPerl distribution.
+
+One can obtain a list of the modules the package will automatically
+link when it compiles and links the C code via the Unix command:
+ perl -s modules.pl -modules
+
+On my system, this gives something like:
+Data::Dumper Fcntl IO IPC::SysV NDBM_File ODBM_File Opcode POSIX SDBM_File Socket attrs re 
+Date::Calc Image::Magick DBI Digest::MD2 Digest::MD5 Digest::SHA1 DBD::mysql SHA 
+
+Now suppose we want to not have the Image::Magick package linked.
+We can set the environment variable PERL_MODULES to be the output from
+the command `perl -s modules.pl -modules' above with that one element removed.
+
+ setenv PERL_MODULES "Data::Dumper Fcntl IO IPC::SysV NDBM_File ODBM_File Opcode POSIX SDBM_File Socket attrs re Date::Calc DBI Digest::MD2 Digest::MD5 Digest::SHA1 DBD::mysql SHA"
+
+and then the regular INSTALL command
+
+ R CMD INSTALL -l pkg RSPerl
+
+will do the "correct" thing.
+
+
+
+R from Perl
+===========
+
+To install the package so as to call R from Perl,
+add the argument
+ --configure-args='--with-in-perl'
+to the R CMD INSTALL command.
+
+Also, see the notes in the document RFromPerl.html.  Do not expect this
+to run on Windows currently.  It only works for Unix/Linux.
+
+
+

@@ -1,0 +1,62 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>R/S-Perl Quick Reference</title>
+</head>
+
+<body>
+<h1>Features and Quick Reference of the R/Splus Perl Package</h1>
+
+<dl>
+  <dt>
+  <li> Start, stop  and restart one or more Perl interpreters.
+  <dd>
+  <dt>
+  <li> Call Perl sub-routines, and object and class methods.
+  <dd> <code>.Perl</code>.
+
+  <dt>
+  <li> Execute perl scripts, either as strings created
+       in S or external files.
+  <dd> <code>.PerlExpr</code>, <code>.PerlFile</code>
+
+  <dt>
+  <li> Set and get elements of Perl arrays and tables using
+       S's <code>[</code> (and <code>[&lt;-</code> operators.
+       Also, compute the length of Perl arrays and tables.
+  <dd>
+
+  <dt>
+  <li> Load a Perl package from S.
+  <dd> <code>.PerlPackage</code>
+      
+  <dt>
+  <li> Examine and manipulate the Perl name spaces
+  <dd> <code>.PerlObjects</code>,  <code>.PerlGet</code>,
+      <code>.PerlUndef</code>, <code>.PerlDiscard</code>,
+       <code>.PerlExists</code>,
+
+  <dt>
+  <li> Transfer S objects to Perl without  assigning/binding
+      them to Perl variables.
+  <dd> <code>.PerlNewTable</code>, <code>.PerlNewArray</code>
+
+
+  <dt>
+  <li> Query the current Perl foreign reference management. 
+  <dd>
+      <code>.PerlReferenceCount</code>
+      <code>.PerlReferenceObjects</code>
+      <code>.PerlDiscard</code>
+</dl>
+
+
+From these primitives, one should be able to control Perl in most
+ways.
+
+<hr>
+<address><a href="http://www.stat.ucdavis.edu/~duncan">Duncan Temple Lang</a>
+<a href=mailto:duncan@wald.ucdavis.edu>&lt;duncan@wald.ucdavis.edu&gt;</a></address>
+<!-- hhmts start -->
+Last modified: Tue May 24 11:11:13 PDT 2005
+<!-- hhmts end -->
+</body> </html>

@@ -1,0 +1,218 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Access to the R engine from Perl</title>
+<link rel="stylesheet" href="file://../../Docs/OmegaTech.css" type="text/css" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:root@localhost" />
+</head>
+
+<body>
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+
+<ul>
+
+	<li><a href="#autoload">AUTOLOAD</a></li>
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#description">DESCRIPTION</a></li>
+	<li><a href="#calling_s_functions">Calling S Functions</a></li>
+	<li><a href="#call_with_named_arguments">Call With Named Arguments</a></li>
+	<li><a href="#r_initialization">R initialization</a></li>
+	<li><a href="#evaluating_s_expressions">Evaluating S expressions</a></li>
+	<li><a href="#register_a_userlevel_converter_">Register a user-level converter.</a></li>
+	<li><a href="#discard_r_reference_value">Discard R Reference Value</a></li>
+	<li><a href="#setdebug__"><code>setDebug()</code></a></li>
+	<li><a href="#loading_an_s_library">Loading an S library</a></li>
+	<li><a href="#author">AUTHOR</a></li>
+	<li><a href="#see_also">SEE ALSO</a></li>
+</ul>
+<!-- INDEX END -->
+
+<hr />
+<p>
+</p>
+<h1><a name="autoload">AUTOLOAD</a></h1>
+<pre>
+ This routine allows us to provide a generic implementation
+ for undefined routines in the R package/module and so 
+ allow shortcuts or syntactic sugar for calls such as
+   &amp;R::sum((1, 2, 3))
+   &amp;R::plot(\@x, \@y)</pre>
+<pre>
+ At present, we don't try to handle callWithNames() in this way,
+ just call().</pre>
+<pre>
+ See pages 296-298, Programming Perl by Wall, Christiansen, Orwant.
+=cut</pre>
+<p>sub AUTOLOAD {
+     # the name of the method being called is R::method and is in 
+     # this package's $AUTOLOAD variable.
+    my $name = our $AUTOLOAD;
+           # remove the R::, allowing for inheritance, say Rext:: .
+    $name =~ s/.*:://;</p>
+<pre>
+     # call the R function by this name.
+    return(call($name, @_));
+}</pre>
+<p>1;
+__END__
+# Below is the stub of documentation for your module. You better edit it!</p>
+<p>
+</p>
+<hr />
+<h1><a name="name">NAME</a></h1>
+<p>R - Perl extension for R, the statistical computing environment</p>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<pre>
+  use R;</pre>
+<p>
+</p>
+<hr />
+<h1><a name="description">DESCRIPTION</a></h1>
+<pre>
+ This module allows one to call R functions, evaluate R expressions
+ and access R objects from within the Perl language. R's statistical,
+ numeric and graphical functionality are immediately available.</pre>
+<p>
+</p>
+<hr />
+<h1><a name="calling_s_functions">Calling S Functions</a></h1>
+<p>This is is the primary mechanism in this module by which one can invoke an S function
+from Perl. The arguments are 
+=over 4
+=item[1] the name of the S function or an RFunctionReference object
+   obtained from an earlier computation
+=item[2] an arbitrary number of arguments which are converted to S values
+  and used as arguments to the S function, in the same order they 
+  are giving here.
+=back</p>
+<p>If the value of this call is assigned in Perl or passed on to another
+call, the return value from the S function is converted to a Perl
+object. Otherwise, it is ignored.</p>
+<p>
+</p>
+<hr />
+<h1><a name="call_with_named_arguments">Call With Named Arguments</a></h1>
+<p>This allows one to call an S function, passing
+some of the arguments by name rather than position.
+The arguments to this are:
+=over 4
+=item a)
+  an identifier for an S function,
+  either a name or an <code>RFunctionReference</code>
+  object computed in an earlier call.
+=item b)
+  a hash of name-value pairs.
+  Currently, you must name all the arguments.
+  In the near future, this will be extended to allow
+  an array of names-value pairs with some values allowed to be
+  <code>''</code>.
+=back</p>
+<p>The return value of the S function is converted 
+to a Perl object (if the result is assigned).</p>
+<p>
+</p>
+<hr />
+<h1><a name="r_initialization">R initialization</a></h1>
+<p>Initialize the R engine. This must be done 
+ first when running R within Java,
+ before making any calls to R functions or accessing
+ R objects. The arguments should be character strings
+ as if they were command line arguments to the R 
+ process.</p>
+<pre>
+ You can call startR  with command line arguments
+ as you would specify them to R for a regular
+ command line invocation, e.g.</pre>
+<pre>
+  startR('--no-save')</pre>
+<pre>
+ This calls initR in the R.xs code and 
+ also loads the RSPerl library into the R
+ interpreter, i.e. via a call
+     &amp;R::library(&quot;RSPerl&quot;)</pre>
+<pre>
+ This library may not be necessary but it is harmless
+ if you don't use it. If you need to avoid loading it into the
+ R session, use initR() instead of startR() in Perl.</pre>
+<p>
+</p>
+<hr />
+<h1><a name="evaluating_s_expressions">Evaluating S expressions</a></h1>
+<p>This routine provides a mechanism for evaluating 
+S expressions given as strings in the S language.
+Because one must first construct the string,
+and since it cannot refer to any Perl or anonymous S 
+objects, it is less rich that than the 
+<code>call</code> and <code>callWithNames</code> routines. However, it is
+convenient for evaluating self-contained S expressions
+such as interactive queries of the state of the S session,
+defining functions and methods, etc.</p>
+<pre>
+  @x = R::eval(&quot;search&quot;);
+  R::eval(&quot;myFun &lt;&lt;- function(n) { rnorm(n) + 100 }&quot;);</pre>
+<p>
+</p>
+<hr />
+<h1><a name="register_a_userlevel_converter_">Register a user-level converter.</a></h1>
+<p>This function allows one to register a user-level converter that are
+used when converting a non-primitive S object to a Perl value. When
+the conversion is attempted, we loop over all registered converters
+and ask the predicate/matching function in the converter whether the
+converter can process the S object. If it can (returning TRUE), then
+we call the actual converter function in this converter.
+One can use closures, etc. to parameterize the converter and matching
+routines.</p>
+<p>See converter.pl in the examples/ directory.</p>
+<p>
+</p>
+<hr />
+<h1><a name="discard_r_reference_value">Discard R Reference Value</a></h1>
+<p>This routine allows us to remove an element in the S reference
+manager that maintains a list of the different S objects that have
+been exported as references to Perl.  This helps us free resources
+being used by S objects for which we no longer need the reference in
+Perl. This is rarely used explicitly by the user, but implicitly
+during the destruction of an <code>RReference</code> object.</p>
+<p>
+</p>
+<hr />
+<h1><a name="setdebug__"><code>setDebug()</code></a></h1>
+<p>This allows one to dynamically toggle the debug status
+(i.e. the variable <code>RPerlDebug</code>)
+for this module. If <code>RPerlDebug</code> is <code>TRUE</code>,
+then a very large number of messages are printed to the console
+from this module explaining detailing different steps in its activities.</p>
+<p>
+</p>
+<hr />
+<h1><a name="loading_an_s_library">Loading an S library</a></h1>
+<p>This is a convenience mechanism for loading an R library and
+processing the return value easily.  This could be deprecated now that
+we discard return values that are not assigned in Perl.</p>
+<pre>
+  R::library(&quot;mva&quot;);
+  $ok = R::call(&quot;library&quot;, &quot;mva&quot;);</pre>
+<p>
+</p>
+<hr />
+<h1><a name="author">AUTHOR</a></h1>
+<p>Duncan Temple Lang <a href="mailto:duncan@wald.ucdavis.edu">duncan@wald.ucdavis.edu</a>
+Bug reports to <a href="mailto:omega-bugs@omegahat.org.">omega-bugs@omegahat.org.</a></p>
+<p>
+</p>
+<hr />
+<h1><a name="see_also">SEE ALSO</a></h1>
+<p>perl(1).</p>
+<p><a href="http://www.omegahat.org/RSPerl">http://www.omegahat.org/RSPerl</a></p>
+
+</body>
+
+</html>

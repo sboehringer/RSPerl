@@ -1,0 +1,14 @@
+Package: RSPerl
+Version: 0.92-1
+Date:    2007/08/02
+Title:   The Omegahat interface for R and Perl.
+Author:  Duncan Temple Lang <duncan@wald.ucdavis.edu>
+Maintainer: Duncan Temple Lang <duncan@wald.ucdavis.edu>
+Depends: R (>= 1.1.0)
+Description: An interface from R (and S-Plus) to an embedded, persistent Perl interpreter,
+       allowing one to call arbitrary Perl subroutines, classes and methods, and for Perl
+       to call S functions.
+License: Free BSD 
+URL:  http://www.omegahat.org/RSPerl,  http://www.omegahat.org
+      http://www.omegahat.org/omegahat-bugs
+

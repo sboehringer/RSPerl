@@ -1,0 +1,22 @@
+R_IN_PERL_LIB=@R_IN_PERL_LIBRARY@
+
+all: $(R_IN_PERL_LIB)
+
+include $(R_HOME)/etc/Makeconf
+include ./Makevars
+
+libPerlConverter$(DYLIB_EXT): Converters.o Reflectance.o  ForeignReference.o UserConverters.o GeneralConverters.o
+	@echo "making $@"
+ifeq ($(DYLIB_EXT),.dylib)
+	MACOSX_DEPLOYMENT_TARGET="10.3" gcc -dynamiclib -undefined dynamic_lookup -o libPerlConverter$(DYLIB_EXT) -install_name @R_PACKAGE_DIR@/libs/libPerlConverter$(DYLIB_EXT) Converters.o Reflectance.o ForeignReference.o UserConverters.o GeneralConverters.o @R_SHLIB_LDFLAGS@ 
+else
+	$(R_HOME)/bin/R CMD SHLIB -o libPerlConverter$(DYLIB_EXT) Converters.c Reflectance.c ForeignReference.c UserConverters.o GeneralConverters.o
+endif
+	if test ! -d @R_PACKAGE_DIR@/libs ; then mkdir @R_PACKAGE_DIR@/libs ; fi
+	cp libPerlConverter$(DYLIB_EXT) @R_PACKAGE_DIR@/libs
+
+RinPerl: libPerlConverter$(DYLIB_EXT) Makefile.perl
+	$(MAKE) -f Makefile.perl @PERL_LD_MAKE_ARG@
+
+Makefile.perl: Makefile.PL
+	$(PERL) Makefile.PL @PERL_INSTALL_PREFIX@

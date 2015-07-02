@@ -1,0 +1,5 @@
+PERL_FLAGS=$(shell @PERL@ -MExtUtils::Embed -e ccopts) -DPERL_POLLUTE 
+PERL_LDFLAGS=$(shell @PERL@ -MExtUtils::Embed -e ldopts)
+
+PKG_CPPFLAGS= -I. $(PERL_FLAGS) @LANGUAGE_DEFS@
+PKG_LIBS=@PERL_MODULE_SO_DIRS@ $(PERL_LDFLAGS) 

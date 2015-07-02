@@ -1,0 +1,22 @@
+R_IN_PERL_LIB=RinPerl
+
+all: $(R_IN_PERL_LIB)
+
+include $(R_HOME)/etc/Makeconf
+include ./Makevars
+
+libPerlConverter$(DYLIB_EXT): Converters.o Reflectance.o  ForeignReference.o UserConverters.o GeneralConverters.o
+	@echo "making $@"
+ifeq ($(DYLIB_EXT),.dylib)
+	MACOSX_DEPLOYMENT_TARGET="10.3" gcc -dynamiclib -undefined dynamic_lookup -o libPerlConverter$(DYLIB_EXT) -install_name /home/pingu/lib64/R-3.1.3/library/RSPerl/libs/libPerlConverter$(DYLIB_EXT) Converters.o Reflectance.o ForeignReference.o UserConverters.o GeneralConverters.o -Wl,--export-dynamic -fopenmp  -L/home/pingu/lib64/R-3.1.3/lib -lR -llzma -lrt -ldl -lm -licuuc -licui18n 
+else
+	$(R_HOME)/bin/R CMD SHLIB -o libPerlConverter$(DYLIB_EXT) Converters.c Reflectance.c ForeignReference.c UserConverters.o GeneralConverters.o
+endif
+	if test ! -d /home/pingu/lib64/R-3.1.3/library/RSPerl/libs ; then mkdir /home/pingu/lib64/R-3.1.3/library/RSPerl/libs ; fi
+	cp libPerlConverter$(DYLIB_EXT) /home/pingu/lib64/R-3.1.3/library/RSPerl/libs
+
+RinPerl: libPerlConverter$(DYLIB_EXT) Makefile.perl
+	$(MAKE) -f Makefile.perl 
+
+Makefile.perl: Makefile.PL
+	$(PERL) Makefile.PL PREFIX=/home/pingu/lib64/R-3.1.3/library/RSPerl LIB=/home/pingu/lib64/R-3.1.3/library/RSPerl/perl

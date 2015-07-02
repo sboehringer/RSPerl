@@ -1,0 +1,16 @@
+use ExtUtils::MakeMaker;
+# See lib/ExtUtils/MakeMaker.pm for details of how to influence
+# the contents of the Makefile that is written.
+WriteMakefile(
+    'FIRST_MAKEFILE'  => 'Makefile.perl',
+    'MAKEFILE'  => 'Makefile.perl',
+    'NAME'	=> 'R',
+    'VERSION_FROM' => 'R.pm', 
+    'PM' => {'R.pm' => '$(INST_LIBDIR)/R.pm',
+             'RReferences.pm' => '$(INST_LIBDIR)/RReferences.pm'
+            },
+    'LIBS'	=> [ "-L. -L@R_PACKAGE_DIR@/libs -lPerlConverter @R_SHLIB_LDFLAGS@" ],   
+    dynamic_lib => {'OTHERLDFLAGS' => '@OTHERLDFLAGS@'},
+    'DEFINE'	=> '-g -D_R_=1 -DUSE_R=1 @R_IN_PERL_DEFINES@',    
+    'INC'	=> '-I. @R_SHLIB_CPPFLAGS@',
+);

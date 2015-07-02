@@ -1,0 +1,5 @@
+PERL_FLAGS=$(shell /usr/bin/perl -MExtUtils::Embed -e ccopts) -DPERL_POLLUTE 
+PERL_LDFLAGS=$(shell /usr/bin/perl -MExtUtils::Embed -e ldopts)
+
+PKG_CPPFLAGS= -I. $(PERL_FLAGS)  -D_R_=1 -DUSE_R=1 -DUSE_TOPLEVEL_EXEC=1 -DWITH_R_IN_PERL=1
+PKG_LIBS= $(PERL_LDFLAGS) 

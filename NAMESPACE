@@ -1,0 +1,81 @@
+# exportPattern(".*")
+export(.Perl, .PerlInit)
+
+export(addConverter, getPerlConverterDescriptions, getNumPerlConverters,
+       getPerlHandler, foreignReference,             
+       referenceHandlerGenerator, removeConverter,
+       setPerlHandler)
+
+export(getPerlScript)
+
+export(names.PerlHashReference)
+export(.onLoad, .onUnload)
+
+export(.PerlClear, .PerlDiscard, .PerlExists, .PerlExpr,
+       .PerlFile, .PerlFindPackage, 
+       .PerlGet, .PerlGetArray, .PerlGetCode, .PerlGetStash, .PerlGet.default,
+       .PerlGetTable, .PerlGet.PerlArrayReference, .PerlGet.PerlHashReference,
+       mkRef, perlModuleLoaded, 
+       getPerlClasses, getPerlMethods
+      )                
+
+
+
+S3method("[",  PerlArrayReference) #XXX should be [[
+S3method("[[",  PerlArrayReference)
+S3method("[<-", PerlArrayReference)
+
+S3method("[", PerlHashReference) # XXX
+S3method("[[", PerlHashReference) # XXX
+S3method("[<-", PerlHashReference)
+S3method("$", PerlReference)  # method dispatch, not element access.
+
+export(perlInitArgs, .PerlInit, .PerlInterpreter, .Perl)
+
+export(.PerlLength, .PerlNames,
+       .PerlNew, .PerlNewArray,
+       .PerlNewTable, .PerlObjects,
+       .PerlPackage, .PerlPackageExists,
+       .PerlReferenceCount, 
+       .PerlReferenceObjects, .PerlSetArray,
+       .PerlSetHash, .PerlStashInfo,
+       .PerlTerminate, .PerlType,
+       .PerlTypes, .PerlUndef)
+
+
+export(parseEval)
+
+export(getPerlDynModules)
+
+useDynLib(RSPerl,
+           RPerl_getNumConverters, RPerl_getConverterDescriptions,
+           RPerl_addConverter, RPerl_removeConverter,
+           RS_PerlArrayElement, RS_PerlHashElement,
+           RS_InitPerl, RS_FinishPerl,
+           RS_PerlClear,
+           RS_PerlEvalString,
+           RS_PerlEvalFile,
+           RS_PerlCallModified,
+           RS_PerlGet,
+           RS_getStashFromCode,
+           RS_getHV, RS_getAV, RS_getCV,
+           RS_getPerlInterpreter,
+           RS_PerlLength, RS_PerlNames,
+           RS_newPerlTable, RS_newPerlArray,
+           RS_discardPerlForeignReference,
+           RS_GetPerlReferenceObjects,
+           RS_PerlReferenceCount,
+           R_makePerlReference,
+           RS_getStash,
+           RS_PerlExists,
+           RS_getPerlType,
+           RS_PerlSetArrayElements,
+           RS_PerlSetHashElements,
+           RS_remove,
+           RS_PerlUndef,
+           RPerl_setDefaultHandler,
+           RPerl_getDefaultHandler
+         )
+
+
+

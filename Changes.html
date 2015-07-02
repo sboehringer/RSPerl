@@ -1,0 +1,584 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>Change History for RSPerl package</title>
+</head>
+
+<body>
+<h1>Changes for Versions of the RSPerl Package</h1>
+
+
+<h2>0.92-0</h2>
+<dl>
+  <dt>
+  <li> Fixed compilation problem where the initRSession was not being
+      activated in the compilation because the relevant configuration
+  <dd>
+  <dt>
+  <li> Added a call to croak() in the Perl code  initR to announce if the R in
+       Perl is not supported.
+  <dd>
+</dl>
+
+<h2>0.92-0</h2>
+<dl>
+  <dt>
+  <li> Better support for determining location of R include files and
+      libraries during installation .
+  <dd>
+
+  <dt>
+  <li> Handle long error messages in RS_PerlEvalString() routine "more gracefully".
+  <dd>
+  <dt>
+  <li> Removed dangling comma in creating a list (with a call to .PerlStashInfo) that suggested
+       forthcoming argument and generated a warning when the package   was loaded.
+  <dd>
+
+  <dt>
+  <li> RReference objects now have an AUTOLOAD method which allows
+      Perl users to make calls of the form
+        $ref->method(1, 2, 3)
+      which calls the R function method with $ref as the first
+      argument  and 1, 2, 3 as the remaining arguments.
+  <dd>
+
+  <dt>
+  <li> Added getPerlDynModules() to return the names of the Perl modules
+       that can have C code that can be dynamically loaded into an R
+       session when Perl is embedded in R. These are specified during
+       the compilation of the package.
+  <dd>      
+</dl>
+
+
+<h2>0.91-2</h2>
+<dl>
+  <dt>
+  <li> Another bug when calling an anonymous R function from Perl passed as a
+       reference to Perl. Identified by Hong Ni.
+  <dd>  Reference counting problem on the result from Perl's getName()
+       method for the RReference object.
+       
+</dl>
+
+<h2>0.91-1</h2>
+<dl>
+  <dt>
+  <li> Bug when calling an anonymous R function from Perl passed as a
+       reference to Perl. Identified by Hong Ni.
+  <dd>  RPerl_getReferenceName() left the Perl stack in an unusual
+       state.  See Rclosure.pl for the example.
+       
+</dl>
+
+
+
+<h2>0.91-0</h2>
+<dl>
+  
+  <dt>
+  <li>Fix supplied by Michael Dondrup for R_callWithNames in R.xs to
+
+      avoid  a stack imbalance issue in R when dealing with R
+       reference objects from Perl.
+  <dd>
+
+
+  <dt>
+  <li> .PerlInit() now has an additional argument loadModules which
+       can be used to load one or more Perl modules after the
+       Perl interpreter has been initialized.
+  <dd> You can avoid this by passing a value of FALSE.
+     
+
+  <dt>
+  <li>.PerlPackage now
+      <ul>
+	<li> handles a vector of package names as the argument and
+	    processes all of them one after another until one fails or
+	    they all succeed;
+	<li> returns a simple S3-style object of class PerlPackage
+	    which contains the name of the package and a reference to
+	    its stash from which one can access the different code objects;
+	<li> avoids checking if the package exists first
+              which was sometimes incorrect,
+      </ul>
+
+  <dt>
+      
+  <li>Added mkRef() function to create a Perl reference to a Perl object
+       converted from an R value. This is for use in methods in which
+       strict refs are in force, e.g. the NetAddr::IP::Find module.
+      
+  <dd>  See ipFind.R in tests/ for an example.
+      
+  <dd>
+
+  <dt>
+  <li> .PerlGetStash() function added for getting the stash from a
+      reference to a code object, i.e. to get the containing module.
+  <dd>
+
+  <dt>
+  <li> perlModuleLoaded can determine whether a module has been loaded
+       in this session. 
+  <dd> (This may not guarantee that it is still loaded!)
+       Unfortunately, it does not seem to provide any updated
+       information after the first time it was called, so it would
+       miss any modules that were loaded subsequent to the first call
+      to perlModuleLoaded.
+
+  <dt>
+  <li> If a reference to a package is made in a call to .Perl,
+       .PerlNew or .PerlStashInfo, it is automatically loaded, if possible. 
+  <dd>
+
+  <dt>
+  <li> .PerlStashInfo() automatically uses .convert = FALSE for the
+       top-level, main module to avoid cyclic references.
+  <dd>
+
+  <dt>
+  <li> Perl's magic types are converted to R as a reference. It is
+       important to preserve the "magic" semantics for general use.  Users can provide
+       special converters in the appropriate contexts.
+  <dd>
+      
+  <dt>
+  <li> .PerlExists() works again.
+  <dd>
+      
+</dl>
+
+<h2>0.9-0</h2>
+
+<dl>
+
+  <dt>
+  <li> Added facility for specifying where the Perl module files
+      should be installed via the
+      <code>--with-perl-prefix=&lt;dir&gt;</code>
+        and <code>--with-perl-lib=&lt;dir&gt;</code> configuration
+      flags.  The values should give the name of the directory which
+      is passed as the value of the PREFIX argument and LIB argument
+      respectively to
+      <code>perl Makefile.PL PREFIX= LIB=</code>.
+      If you want to use the standard Perl location, then use
+       <code> --with-perl-prefix=</code>, i.e. with no value specified
+      for the directory and omit the --with-perl-lib.
+       If you want specify the directory and use that one exactly as
+      the value in PERL5LIB, then use --with-perl-lib.
+
+      <p/>
+      The default is still to install the Perl files into 
+      <br>
+      Note that the R installation process will attempt to perform the
+      installation of the Perl module files. If it does not have
+      permission to write to the relevant directories, it continues.
+      You must then go to the RSPerl/src/ directory in the source
+      package      and give the command
+<pre>      
+        make -f Makefile.perl install
+</pre>
+      having obtained the appropriate permissions, e.g., via sudo or
+      logging in as root or whatever.
+      
+  <dd>
+
+  <dt>
+  <li> initR() in the Perl module now sets the value of R_HOME if it
+      is not already set in the environment variables of the process
+      and also loads the RSPerl package into R after starting the
+      session.
+      
+  <dd>
+       initR() is now a regular subroutine and
+      initRSession() is the name of the native routine.
+      
+  <dt>
+  <li> Set PERL5LIB in R function .PerlInit() if PERL5LIB and PERLIB
+       are not already set in the process' environment variables.
+  <dd> Function setPerlLib() is available to set this explicitly if
+       you need it. And getPerl5LibValue() returns the value of the
+       PERL5LIB setting determined at installation time.
+
+  <dt>
+  <li> Non-trivial update to the RFromPerl document (now in HTML from XML).
+  <dd>
+      
+  <dt>
+  <li> Restored the old (0.8-0 and earlier) behaviour of converting
+       references to Perl arrays and hashes as regular R vectors or lists.
+  <dd> When conversion is not requested, e.g. with <code>convert =
+       FALSE</code> in an R function call, the class of the resulting
+       Perl reference is computed correctly.
+
+  <dt>
+  <li> When converting a Perl array (or hash) with a mixture of
+       integers and reals (IV and NV in Perl types), the converter
+       recognizes this and creates a numeric vector.
+ <dd>  Added test for this scenario in isHomogeneous.
+  
+  <dt>
+  <li> .PerlExpr() now does not terminate  via a call to exit
+        when there is an error in the Perl command.
+  <dd>
+       This changes the third argument to Perl_eval_pv which is
+      croak_on_error. A value of 0 avoids the error.
+      We may use the approach of overriding CORE::exit as in mod_perl
+      also.
+
+
+  <dt>
+  <li> The opaque data types that are used to represent references to
+       Perl objects as regular R values now use external pointers in
+      R.
+       This will continue to undergoe change to clean this up and
+      remove the R code that treats the object as a list. 
+      
+  <dd>
+
+  <dt>
+  <li> Removed tryEval.c and all references to tryEval().
+  <dd>
+
+
+</dl>
+
+
+<h2>0.8-2</h2>
+ <dl>
+  <dt>
+  <li> Modified tryEval.c to be a simple call to R_tryEval(). This avoids the problem of
+      R_ToplevelExec not being an exported symbol unders some compilers.
+  <dd>
+ </dl>
+
+<h2>0.8-1</h2>
+
+<dl>
+  <dt> names() for a PerlHashReference object now gives back the keys
+      in the underlying Perl hash table.
+  <dd>
+
+  <dt>
+  <li> .PerlExpr() takes a convert argument which can be NULL to
+       supress the return value.
+  <dd>
+      
+  <dt>
+  <li> Use [[ for accessing elements in a PerlHashReference or
+      PerlArrayReference,    rather than the [ operator.
+  <dd> The latter will be modified in subesquent releases to have
+      different semantics.
+
+  <dt>
+  <li> Added convert argument for [[ operator for arrays and hash tables.
+  <dd>
+
+  <dt>
+  <li> Caught a general case where the class of the Perl reference was not
+       being computed correctly.
+  <dd>
+      
+</dl>
+
+
+<h2>0.8-0</h2>
+
+<dl>
+
+  <dt>
+  <li> The PERL5LIB needed to find the R.pm and RReferences.pm modules
+      is now simpler: a single element <code>&lt;r package install dir&gt;share/lib/perl5/site_perl/</code>.
+  <dt> You can still use the shell scripts in scripts/RSPerl.* to set
+      the relevant variables.
+  
+  <dt>
+  <li> If --with-in-perl is specified in the configure-args for the
+       <code>R CMD INSTALL</code> command,  by default, support for Perl modules
+        with C code are not compiled into the R interface. This is
+        typically not a problem as people usually just call R from Perl.
+        If you need bi-directional interaction, e.g. with callbacks,
+        that require
+  <dd>
+
+  <dt>
+  <li> Patch from Stefan Evert for OS X so that we the Perl module can
+       locate the libPerlConverter.dylib file without needing to
+       explicitly set the DYLD_LIBRARY_PATH to find libPerlConverter.*
+  <dd> You can still use the shell scripts in scripts/RSPerl.* to set
+      the relevant variables.
+  
+  <dt>
+  <li> Fixed trivial but significant error in converting homogeneous
+      arrays with references.
+       
+  <dd>  Identified by Jan Hummel. See nestedArrays.pl in the examples/
+       directory.
+  <dt>
+  <li> Added facilities to specify a converter pair (predicate and
+      converter routines) from Perl to convert from Perl  to R.
+      
+  <dd> Previously, this was feasible but not implemented.
+</dl>
+
+<h2>0.7-0</h2>
+
+<dl>
+  <dt>
+  <li>  Added an AUTOLOAD routine for R in Perl.
+  <dd>  This allows users to call R functions using the syntax
+   <code>R::sum(</code>, <code>R::plot()</code>,  etc.
+       rather than  <code>R::call("sum")</code>.
+       <br>
+        This does not work for callWithNames(), at this point.
+</dl>
+
+<h2>0.6-5</h2>
+
+<dl>
+  <dt>
+  <li>  Fix to the regular expression in the NAMESPACE file.
+  <dd>
+</dl>
+
+
+<h2>0.6-4</h2>
+
+<dl>
+  <dt> Altered the exportPattern() to explicilty export the functions
+    we want.
+    
+  <dd>
+  
+  <dt>  Support for Mac OS X  for running R within Perl.
+  <dd>  
+  <ul> 
+    <li> Create libPerlConverter as a dylib, and the others as bundles.
+
+    <li> Use DYLD_LIBRARY_PATH in the RSperl.{csh,bsh} scripts to
+       set the environment variables appropriately.
+   
+  </ul>
+
+  <dt> Location of libR.so now points to lib in Makefile.PL.
+  <dd>
+
+
+  <dt> .onLoad() initializes the Perl interpreter.
+  <dd> (Not certain this is a good idea, but it is backward compatible
+        with earlier versions.)
+      
+
+  <dt> An undef in Perl was being returned as a reference to a strange
+      object. Fixed now.
+  <dd>
+
+  <dt> Collapsing Perl arrays into vectors when possible
+      (i.e. homogeneous types) in returning a value from Perl
+      in .Perl() is now working better.
+  <dd>
+
+  <dt> .PerlFile now checks for the existence of the file and
+      expands the path name, so ~ is expanded.
+  <dd>
+
+  <dt> Test that the Perl interpreter has been started before
+      evaluating a Perl expression, etc. that uses it. This avoids
+      silly segfaults.
+  <dd>
+
+  <dt> RPerlDebug in R.xs is now set to off.
+  <dd>
+</dl>
+
+<h2>0.6-3</h2>
+
+<dl>
+  <dt>
+      Handle undefined values in callWithNames 
+  <dd> Reported by Michael Dondrup with the example
+         <code>R::callWithNames(foo, {'x'=>undef});</code>
+</dl>
+
+
+
+<h2>0.6-2</h2>
+<dl>
+  <dt> PDF now not empty files.
+  <dd>
+</dl>
+
+
+
+<h2>0.6-1</h2>
+
+<dl>
+  <dt>
+  <li> Patch from Eric Jensen (Information Retrieval Lab at Illinois
+        Institute of Technology) for testing homegeneity of a Perl
+        collection.
+  <dd>
+
+  <dt>
+  <li> Fixed R::callWithNames() thanks to a bug report
+      from Eric!
+  <dd>
+
+  <dt>
+  <li> Cleanup for R CMD check.
+  <dd>
+  <dl>
+  <dt>
+  <li> NAMESPACE added 
+  <dd> Everything exported.
+
+  <dt>
+  <li>  T and F instances changed to TRUE and FALSE.
+  <dd>
+
+  <dt>
+  <li> Documentation enhancements and corrections.
+  <dd>
+      </dl>
+</dl>
+
+
+<h2>0.6-0</h2>
+<dl>
+  <dt> Added a .args argument to .Perl to allow the caller to specify
+      the
+      actual argument list.
+  <dd>
+       This allows the caller to deal directly with the Perl stack a little more easily.
+
+  <dt> Changed the modules.pl script used in the configuration to use
+       information from the Config module (Config.pm).
+  <dd>
+
+  <dt> Setting <i>PERL_MODULES</i> to <b>no</b> forces no modules to be loaded.
+  <dd> This is the same as the command line arguments
+       to the <code>R CMD INSTALL</code> command  with
+        the arguments  --configure-args='-with-modules=no'.
+
+
+  <dt> Generate our own xs_init if no Perl modules are used
+      (i.e. including R within Perl). 
+  <dd>
+
+  <dt> Switched environment variable to PERL5LIB (from PERLLIB) in scripts.
+  <dd>
+</dl>
+
+
+<h2>0.5-6</h2>
+
+<dl>
+  <dt> --without-modules now works.
+  <dd> Thanks to Chris Handorf for pointing out the error that caused
+      boot_no to be referenced.
+</dl>
+
+<h2>0.5-5</h2>
+<dl>
+  <dt> Test if dTHX is defined and if not provide a pre-processor
+      definition for it. 
+  <dd> Needed for earlier versions of Perl.
+</dl>
+
+<h2>0.5-4</h2>
+<dl>
+  <dt> Configuration corrections for including all converter
+       code in the libPerlConverter.so
+  <dd>
+      
+  <dt> Error message about unhandled types in array conversion
+       gives the index of the element.
+  <dd>
+</dl>
+
+<h2>0.5-3</h2>
+<dl>
+  <dt> Reset the error stack when we cannot find a routine
+       in R_PerlCallModified.
+  <dd>
+</dl>
+
+<h2>0.5-2</h2>
+<dl>
+  <dt>
+  <li> Support for compiling with a threaded installation of Perl.
+  <dd> Manifesting itself as compilation errors about missing
+       variable <code>my_perl</code>. Pointed out by Steffen Neumann.
+</dl>
+
+<h2>0.5-1</h2>
+<dl>
+  <dt> Removed the deprecated perl_ prefix from the Perl
+       API routines. Hopefully this will help compilation
+       on systems which currently fail.
+  <dd>
+</dl>
+
+<h2>0.5-0</h2>
+<dl>
+  <dt> User-level converters
+  <dd> See <code>setConverter</code> in Perl and
+      <code>addConverter()</code> in R.
+  <dt> Garbage collection of the RReferences in Perl.
+  <dd>
+  <dt> Check for primitives when converting from R to Perl
+      includes objects with a dimension and/or class attribute.
+  <dd>
+</dl>
+
+<h2>0.4-0</h2>
+<dl>
+
+  <dt> Perl calls which do not "use" the return value
+       avoid conversion of the resulting R object.
+  <dd> This is checks the GIMME_V value to look for a G_VOID context.
+
+  <dt> Subsetting a Perl array or hashtable with the <code>[</code>
+       operator  now returns  a single value when just one index
+       is used in specifying the subset. This contrasts with returning
+       a list with a single element.
+  <dd>
+  
+  <dt> Handling of NULLs correctly added to different routines.
+  <dd>
+      
+  <dt> Array and hash subsetting works for references also.
+  <dd> In particular, this works for (blessed) objects of these types.
+      
+  <dt> Can pass a reference to an R function as the argument to R::call()
+  <dd>
+      
+  <dt> Passing rferences from R to Perl works properly now.
+  <dd>
+      
+  <dt> Report name of the Perl sub-routine being called when an error occurs.
+  <dd>
+
+  <dt> Added RFunctionReferences and RNamedFunctionReferences to
+       RReferences module. And extended conversion to export R
+       functions using the former.
+        Overloading of the invocation mechanism to allow
+ <pre>
+      $fun = RNamedFunctionReference->new("foo");
+      $f->(arg1, arg2,...);
+ </pre>
+  <dd>
+      
+  <dt> Can call R from Perl running within an R session, i.e Perl
+       callbacks to R, for full bi-directional interface.
+  <dd>  
+</dl>
+
+<hr>
+<address></address>
+<!-- hhmts start -->
+Last modified: Thu Aug  2 06:23:22 PDT 2007
+<!-- hhmts end -->
+</body> </html>

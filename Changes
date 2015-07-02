@@ -1,0 +1,3 @@
+Added tests for homogeneity of the elements within an array and hash
+table so the resulting R object can be returned in its normal form
+(i.e an integer, character or numeric vector) rather than a list.

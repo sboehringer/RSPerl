@@ -1,0 +1,14 @@
+if test -n "${LD_LIBRARY_PATH})" ;  then
+ export @LD_PATH_VAR@=${@LD_PATH_VAR@}:@LD_PATH@:@R_SO_DIR@
+else
+ export @LD_PATH_VAR@=@LD_PATH@:@R_SO_DIR@
+fi
+
+if test -n "@PERL5_PATH@" ; then
+ if test -n "${PERL5LIB}" ; then
+   export PERL5LIB=${PERL5LIB}:@PERL5_PATH@
+ else
+   export PERL5LIB=@PERL5_PATH@
+ fi
+fi
+
