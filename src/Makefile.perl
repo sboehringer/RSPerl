@@ -19,7 +19,7 @@
 #     LIBS => [q[-L. -L/home/pingu/lib64/R-3.1.3/library/RSPerl/libs -lPerlConverter -Wl,--export-dynamic -fopenmp  -L/home/pingu/lib64/R-3.1.3/lib -lR -llzma -lrt -ldl -lm -licuuc -licui18n]]
 #     MAKEFILE => q[Makefile.perl]
 #     NAME => q[R]
-#     PM => { R.pm=>q[$(INST_LIBDIR)/R.pm], RReferences.pm=>q[$(INST_LIBDIR)/RReferences.pm] }
+#     PM => { RReferences.pm=>q[$(INST_LIBDIR)/RReferences.pm], R.pm=>q[$(INST_LIBDIR)/R.pm] }
 #     PREREQ_PM => {  }
 #     TEST_REQUIRES => {  }
 #     VERSION_FROM => q[R.pm]
