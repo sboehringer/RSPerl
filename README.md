@@ -6,9 +6,6 @@ R CMD INSTALL . --configure-args='--with-in-perl'
 
 To load the package, issue:
 ```
-l = .libPaths()[1];
-Sys.setenv(PERL5LIB = sprintf('%s/RSPerl/scripts:%s/RSPerl/perl/x86_64-linux-thread-multi/:%s',
-	l, l, Sys.getenv('PERL5LIB')));
 library('RSPerl');
 ```
 
@@ -16,3 +13,4 @@ These inconveniences will be fixed.
 
 ToDo:
   * allow installation with `devtools`
+  * use of perl modules with c-code 
