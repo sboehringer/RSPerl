@@ -1,9 +1,18 @@
+#
+#	configure.ac for RSPerl
+#
+# - 2015/07
+#	+ updates to work with current linux environments
+#	+ To refresh and test:
+#		aclocal ; autoconf ; ./configure --with-in-perl
+#		aclocal ; autoconf ; ./configure
+
 dnl Configuration script for RSPerl
 
 AC_INIT(DESCRIPTION)
 
-AC_PATH_PROG(PERL, perl)
-
+AC_PATH_PROG(PERL, perl, "/usr/bin/perl")
+AC_SUBST(PERL)
 AC_ARG_WITH(modules, list of Perl modules with C-level code auto load,,)
 
 AC_ARG_WITH(splus,[--with-splus		Compile as an SPlus library (rather than R). Value can be the (fully qualified) name of the Splus script.], USE_SPLUS=1)
@@ -18,7 +27,7 @@ if test "${with_in_perl}" != "no" ; then
 fi
 
 AC_SUBST(R_IN_PERL_LIBRARY)
-
+R_HOME=`echo 'cat(R.home(component = "home"))' | Rscript -`
 AC_SUBST(R_HOME)
 AC_SUBST(R_SHLIB_CPPFLAGS)
 AC_SUBST(R_SHLIB_LDFLAGS)
@@ -31,7 +40,9 @@ dnl use
 dnl     --with-perl-prefix=
 dnl i.e. with no value.  The default value is $R_PACKAGE_DIR (not $R_PACKAGE_DIR)
 
+R_PACKAGE_DIR=$R_HOME/library/RSPerl
 AC_ARG_WITH(perl-prefix, [Name of directory passed to perl Makefile.PL PREFIX=<dir>], [SET_PERL_PREFIX="user"; PERL_PREFIX=$withval], [ PERL_PREFIX=${R_PACKAGE_DIR}])
+#AC_ARG_WITH(perl-prefix, [Name of directory passed to perl Makefile.PL PREFIX=<dir>], [SET_PERL_PREFIX="user"; PERL_PREFIX=$withval], [ PERL_PREFIX=`perl -e 'print "$INC[0]"'`])
 AC_ARG_WITH(perl-lib, [Name of directory passed to perl Makefile.PL LIB=<dir>], [SET_PERL_LIB="user"; PERL_LIB=$withval], [ PERL_LIB=${R_PACKAGE_DIR}/perl])
 
 #if test "${SET_PERL_LIB}" = "user" && test "${SET_PERL_PREFIX}"
@@ -331,16 +342,16 @@ fi
 
 if test -n "${R_IN_PERL_LIBRARY}" ; then
   echo "making target all in RinPerlMakefile"
-  ${MAKE-make} -f RinPerlMakefile 
+  PERL=$PERL R_INCLUDE_DIR=$R_HOME/include R_SHARE_DIR=$R_HOME/share R_HOME=$R_HOME ${MAKE-make} -f RinPerlMakefile 
   echo "calling make -f Makefile.perl install"
-  ${MAKE-make} -f Makefile.perl install
+  PERL=$PERL R_INCLUDE_DIR=$R_HOME/include R_SHARE_DIR=$R_HOME/share R_HOME=$R_HOME ${MAKE-make} -f Makefile.perl install
 
 else
    #XXX Need to install R.pm, RReferences.pm but not build the library.
    # So the install needs to bypasss building the C code for the Perl library.
   echo "just installing the relevant Perl pieces and not building the embeddable R Perl module"
-  ${MAKE-make} -f RinPerlMakefile Makefile.perl
-  ${MAKE-make} -f Makefile.perl install
+  PERL=$PERL R_INCLUDE_DIR=$R_HOME/include R_SHARE_DIR=$R_HOME/share R_HOME=$R_HOME ${MAKE-make} -f RinPerlMakefile Makefile.perl
+  PERL=$PERL R_INCLUDE_DIR=$R_HOME/include R_SHARE_DIR=$R_HOME/share R_HOME=$R_HOME ${MAKE-make} -f Makefile.perl install
 
 fi
 

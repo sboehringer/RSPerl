@@ -40,9 +40,9 @@ sub initR {
     initRSession(@_);
     # Load the RSPerl package. We know the lib.loc so we specify it explicitly
     # which will cause problems if we install a new RSPerl package or point to a new one
-    # with R_LIBS and don't use a new R.pm.  We could put /home/pingu/lib64/R-3.1.3/library on the end of the
+    # with R_LIBS and don't use a new R.pm.  We could put  on the end of the
     # R_LIBS environment variable before loading the R session.
-    &R::callWithNames('library', { package => "RSPerl", 'lib.loc' => "/home/pingu/lib64/R-3.1.3/library"});
+    &R::callWithNames('library', { package => "RSPerl", 'lib.loc' => ""});
     return(1);
 }
 

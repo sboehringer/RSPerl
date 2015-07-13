@@ -333,10 +333,10 @@ MPOLLUTE =
 # R might depend on some other libraries:
 # See ExtUtils::Liblist for details
 #
-EXTRALIBS = -L/home/pingu/tmp/foreign/RSPerl/src -lPerlConverter -Wl,--export-dynamic -L/home/pingu/lib64/R-3.1.3/lib -lR -llzma -lrt -licuuc -licui18n
-LDLOADLIBS = -L/home/pingu/tmp/foreign/RSPerl/src -lPerlConverter -Wl,--export-dynamic -L/home/pingu/lib64/R-3.1.3/lib -lR -llzma -lrt -ldl -lm -licuuc -licui18n
+EXTRALIBS = -L/home/pingu/src/Rpackages/RSPerl/src -L/home/pingu/lib64/R-3.1.3/library/RSPerl/libs -lPerlConverter -Wl,--export-dynamic -L/home/pingu/lib64/R-3.1.3/lib -lR -llzma -lrt -licuuc -licui18n
+LDLOADLIBS = -L/home/pingu/src/Rpackages/RSPerl/src -L/home/pingu/lib64/R-3.1.3/library/RSPerl/libs -lPerlConverter -Wl,--export-dynamic -L/home/pingu/lib64/R-3.1.3/lib -lR -llzma -lrt -ldl -lm -licuuc -licui18n
 BSLOADLIBS = 
-LD_RUN_PATH = /home/pingu/tmp/foreign/RSPerl/src:/home/pingu/lib64/R-3.1.3/lib:/usr/lib:/usr/lib/../lib64
+LD_RUN_PATH = /home/pingu/src/Rpackages/RSPerl/src:/home/pingu/lib64/R-3.1.3/lib:/usr/lib:/usr/lib/../lib64
 
 
 # --- MakeMaker const_cccmd section:
@@ -611,8 +611,8 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) \
-	  $(OBJECT) 
+	  $(FIRST_MAKEFILE) $(OBJECT) \
+	  $(MAKEFILE_OLD) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 
