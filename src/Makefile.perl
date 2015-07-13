@@ -19,7 +19,7 @@
 #     LIBS => [q[-L. -L/home/pingu/lib64/R-3.1.3/library/RSPerl/libs -lPerlConverter -Wl,--export-dynamic -fopenmp  -L/home/pingu/lib64/R-3.1.3/lib -lR -llzma -lrt -ldl -lm -licuuc -licui18n]]
 #     MAKEFILE => q[Makefile.perl]
 #     NAME => q[R]
-#     PM => { RReferences.pm=>q[$(INST_LIBDIR)/RReferences.pm], R.pm=>q[$(INST_LIBDIR)/R.pm] }
+#     PM => { R.pm=>q[$(INST_LIBDIR)/R.pm], RReferences.pm=>q[$(INST_LIBDIR)/RReferences.pm] }
 #     PREREQ_PM => {  }
 #     TEST_REQUIRES => {  }
 #     VERSION_FROM => q[R.pm]
@@ -333,8 +333,8 @@ MPOLLUTE =
 # R might depend on some other libraries:
 # See ExtUtils::Liblist for details
 #
-EXTRALIBS = -L/home/pingu/src/Rpackages/RSPerl/src -L/home/pingu/lib64/R-3.1.3/library/RSPerl/libs -lPerlConverter -Wl,--export-dynamic -L/home/pingu/lib64/R-3.1.3/lib -lR -llzma -lrt -licuuc -licui18n
-LDLOADLIBS = -L/home/pingu/src/Rpackages/RSPerl/src -L/home/pingu/lib64/R-3.1.3/library/RSPerl/libs -lPerlConverter -Wl,--export-dynamic -L/home/pingu/lib64/R-3.1.3/lib -lR -llzma -lrt -ldl -lm -licuuc -licui18n
+EXTRALIBS = -L/home/pingu/src/Rpackages/RSPerl/src -lPerlConverter -Wl,--export-dynamic -L/home/pingu/lib64/R-3.1.3/lib -lR -llzma -lrt -licuuc -licui18n
+LDLOADLIBS = -L/home/pingu/src/Rpackages/RSPerl/src -lPerlConverter -Wl,--export-dynamic -L/home/pingu/lib64/R-3.1.3/lib -lR -llzma -lrt -ldl -lm -licuuc -licui18n
 BSLOADLIBS = 
 LD_RUN_PATH = /home/pingu/src/Rpackages/RSPerl/src:/home/pingu/lib64/R-3.1.3/lib:/usr/lib:/usr/lib/../lib64
 
@@ -611,8 +611,8 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(FIRST_MAKEFILE) $(OBJECT) \
-	  $(MAKEFILE_OLD) 
+	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) \
+	  $(OBJECT) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 
