@@ -275,7 +275,7 @@ PerlExtensionInit
 getPerlExtensionRoutine(USER_OBJECT_ rsExtensions)
 {
 #ifdef _R_
- void* R_FindSymbol(char const *, char const *);
+// void* R_FindSymbol(char const *, char const *);
 #endif
  PerlExtensionInit lxs_init = NULL;
 
@@ -284,7 +284,7 @@ getPerlExtensionRoutine(USER_OBJECT_ rsExtensions)
      /* */
     
 #ifdef _R_
-   lxs_init = (PerlExtensionInit) R_FindSymbol(CHAR_DEREF(STRING_ELT(rsExtensions,0)), GET_LENGTH(rsExtensions) > 1 ? CHAR_DEREF(STRING_ELT(rsExtensions,1)) : NULL);
+   lxs_init = (PerlExtensionInit) R_FindSymbol(CHAR_DEREF(STRING_ELT(rsExtensions,0)), GET_LENGTH(rsExtensions) > 1 ? CHAR_DEREF(STRING_ELT(rsExtensions,1)) : NULL, 0);
 #else
     lxs_init = (PerlExtensionInit) dlsym(NULL, CHAR_DEREF(STRING_ELT(rsExtensions,0)));
 #endif    
